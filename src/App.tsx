@@ -17,7 +17,7 @@ function App() {
         <Route path="biashara" element={<Biashara />} />
         <Route path="kazi" element={<Kazi />} />
         <Route path="linda" element={<Linda />} />
-        <Route path="soko" element={<Soko />} />
+        <Route path="soko/*" element={<Soko />} />
         <Route path="trust/score" element={<TrustScore />} />
       </Route>
     </Routes>
