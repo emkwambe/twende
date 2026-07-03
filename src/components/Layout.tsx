@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
-  Home, Users, Wallet, Briefcase, Shield, ShoppingBag,
+  Home, Users, Wallet, Briefcase, Shield, ShoppingBag, Star,
   Menu, X, Bell, ChevronDown, TrendingUp
 } from 'lucide-react';
 import { currentUser } from '../data/mockData';
+import { calculateTrustScore } from '../trust/algorithm';
+import { trustScoreFactors } from '../data/mockData';
 
 const navItems = [
   { path: '/', label: 'Overview', icon: Home, color: 'text-ocean' },
@@ -13,10 +15,17 @@ const navItems = [
   { path: '/kazi', label: 'Kazi', icon: Briefcase, color: 'text-kazi' },
   { path: '/linda', label: 'Linda', icon: Shield, color: 'text-linda' },
   { path: '/soko', label: 'Soko', icon: ShoppingBag, color: 'text-soko' },
+  { path: '/trust/score', label: 'Trust Score', icon: Star, color: 'text-ocean' },
 ];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Compute real trust score from factors
+  const trustResult = calculateTrustScore(trustScoreFactors);
+  const scoreColor = trustResult.score >= 750 ? 'text-yellow-500' : 
+                     trustResult.score >= 650 ? 'text-fresh' : 
+                     trustResult.score >= 500 ? 'text-sunrise' : 'text-coral';
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden">
@@ -30,9 +39,9 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-300 lg:transform-none ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } flex flex-col`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transition-transform duration-300 flex flex-col ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-border">
@@ -49,19 +58,21 @@ export default function Layout() {
         </div>
 
         {/* Credit Score Card */}
-        <div className="mx-4 mt-4 p-3 rounded-xl bg-gradient-to-br from-ocean to-ocean-light">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-white/70 uppercase tracking-wider">Credit Score</span>
-            <span className="text-xs font-bold text-fresh">{currentUser.creditTier}</span>
+        <NavLink to="/trust/score" onClick={() => setSidebarOpen(false)}>
+          <div className="mx-4 mt-4 p-3 rounded-xl bg-gradient-to-br from-ocean to-ocean-light cursor-pointer hover:from-ocean-dark hover:to-ocean transition-colors">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-white/70 uppercase tracking-wider">Trust Score</span>
+              <span className={`text-xs font-bold ${scoreColor}`}>{trustResult.tierName}</span>
+            </div>
+            <div className="text-2xl font-bold text-white">{trustResult.score}</div>
+            <div className="mt-2 h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-fresh rounded-full transition-all duration-500"
+                style={{ width: `${((trustResult.score - 300) / 550) * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-white">{currentUser.creditScore}</div>
-          <div className="mt-2 h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-fresh rounded-full transition-all duration-500"
-              style={{ width: `${((currentUser.creditScore - 300) / 550) * 100}%` }}
-            />
-          </div>
-        </div>
+        </NavLink>
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1">

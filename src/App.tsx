@@ -6,6 +6,7 @@ import Biashara from './pages/Biashara';
 import Kazi from './pages/Kazi';
 import Linda from './pages/Linda';
 import Soko from './pages/Soko';
+import TrustScore from './pages/TrustScore';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="kazi" element={<Kazi />} />
         <Route path="linda" element={<Linda />} />
         <Route path="soko" element={<Soko />} />
+        <Route path="trust/score" element={<TrustScore />} />
       </Route>
     </Routes>
   );

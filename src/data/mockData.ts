@@ -193,7 +193,76 @@ export const sokoOrders = [
   { id: 'o4', buyer: 'David N.', item: 'Custom Kitenge Bag', qty: 1, amount: 1500, status: 'delivering', date: '2026-07-01' },
 ];
 
-// PLATFORM OVERVIEW
+// TRUST ENGINE DATA (Sprint 05)
+export const trustScoreFactors = {
+  chama: {
+    contributionConsistency: 85,   // 85% on-time contributions
+    savingsVolume: 72,              // KES 108K saved across chamas
+    groupTenure: 18,                // 18 months in chamas
+    leadershipRole: true,           // Treasurer of Mbele Savings
+  },
+  mpesa: {
+    transactionVolume: 65,           // Moderate monthly volume
+    transactionFrequency: 70,       // ~10 transactions/week
+    balanceStability: 55,           // Some variation
+    airtimePurchase: 90,             // Consistent small purchases
+  },
+  soko: {
+    gmv: 68,                         // KES 68K monthly GMV
+    customerRating: 94,              // 4.7/5 stars = 94%
+    fulfillmentRate: 96,            // 96% orders fulfilled
+    inventoryTurnover: 45,          // ~45 days to sell
+  },
+  loans: {
+    repaymentRate: 80,               // 80% on-time (some delays)
+    activeLoans: 1,                  // 1 active loan
+    defaultHistory: false,           // No defaults
+    creditUtilization: 50,          // 50% of limit used
+  },
+  kazi: {
+    gigsCompleted: 0,                // Not enrolled in Kazi
+    employerRating: 0,
+    incomeStability: 0,
+    skillDiversity: 0,
+  },
+  linda: {
+    premiumConsistency: 95,          // 95% on-time payments
+    claimsHistory: 1,                // 1 claim (Seller Shield)
+    policyTenure: 6,                 // 6 months insured
+    noClaimBonus: false,             // Has claimed
+  },
+  kyc: {
+    tier: 2 as const,               // Tier 2 KYC
+    idVerified: true,
+    addressVerified: false,          // Not yet verified
+    biometricEnrolled: true,
+  },
+};
+
+export const trustScoreEvents = [
+  { id: 'e1', eventType: 'chama_contribution', factor: 'chama', oldScore: 645, newScore: 648, delta: 3, reason: 'Monthly contribution to Nyota Chama: KES 2,000', createdAt: '2026-07-01T10:30:00Z' },
+  { id: 'e2', eventType: 'loan_repayment', factor: 'loans', oldScore: 642, newScore: 645, delta: 3, reason: 'Early loan repayment: KES 3,750', createdAt: '2026-06-15T14:20:00Z' },
+  { id: 'e3', eventType: 'soko_sale', factor: 'soko', oldScore: 640, newScore: 642, delta: 2, reason: 'Completed sale: Kitenge Wrap Dress x2', createdAt: '2026-06-30T09:15:00Z' },
+  { id: 'e4', eventType: 'insurance_premium', factor: 'linda', oldScore: 639, newScore: 640, delta: 1, reason: 'Linda premium paid on time: KES 50', createdAt: '2026-06-28T08:00:00Z' },
+  { id: 'e5', eventType: 'chama_contribution', factor: 'chama', oldScore: 636, newScore: 639, delta: 3, reason: 'Monthly contribution to Mbele Savings: KES 5,000', createdAt: '2026-06-10T11:00:00Z' },
+  { id: 'e6', eventType: 'loan_repayment', factor: 'loans', oldScore: 633, newScore: 636, delta: 3, reason: 'Monthly loan repayment: KES 3,750', createdAt: '2026-05-20T16:45:00Z' },
+  { id: 'e7', eventType: 'soko_sale', factor: 'soko', oldScore: 630, newScore: 633, delta: 3, reason: 'High-value order: Ankara Fabric x3', createdAt: '2026-05-18T13:30:00Z' },
+  { id: 'e8', eventType: 'kyc_upgrade', factor: 'kyc', oldScore: 625, newScore: 630, delta: 5, reason: 'KYC upgraded to Tier 2: ID + selfie verified', createdAt: '2026-05-01T10:00:00Z' },
+];
+
+export const trustScoreHistory = [
+  { month: 'Jan', score: 580, tier: 2 },
+  { month: 'Feb', score: 595, tier: 2 },
+  { month: 'Mar', score: 610, tier: 2 },
+  { month: 'Apr', score: 625, tier: 2 },
+  { month: 'May', score: 640, tier: 2 },
+  { month: 'Jun', score: 650, tier: 3 },
+];
+
+export const scoreDisputes = [
+  { id: 'd1', factor: 'loans', reason: 'I repaid my loan early but my score did not reflect this', status: 'resolved' as const, createdAt: '2026-06-20T10:00:00Z', resolvedAt: '2026-06-22T14:00:00Z', resolution: 'Verified early repayment. Score corrected by +3 points.' },
+];
+
 export const platformStats = {
   totalUsers: '2.4M',
   activeChamas: '75,000',
