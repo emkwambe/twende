@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  ShoppingBag, Link2, Star, TrendingUp, Package,
+  ShoppingBag, Link2, Star, Package,
   CheckCircle, Clock, Truck, Plus, ExternalLink
 } from 'lucide-react';
 import { sokoStore, sokoListings, sokoOrders } from '../data/mockData';

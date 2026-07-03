@@ -1,6 +1,6 @@
 import {
   Users, Wallet, Briefcase, Shield, ShoppingBag,
-  TrendingUp, ArrowUpRight, ArrowDownRight, Activity
+  TrendingUp, ArrowUpRight, Activity
 } from 'lucide-react';
 import {
   currentUser, platformStats, recentActivity, myChamas,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  Wallet, TrendingUp, ArrowUpRight, ArrowDownRight,
-  CreditCard, CheckCircle, Clock, AlertCircle, Building2
+  Wallet, TrendingUp,
+  CreditCard, CheckCircle, Clock, Building2
 } from 'lucide-react';
 import { biasharaProfile, biasharaTransactions } from '../data/mockData';
 

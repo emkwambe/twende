@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Briefcase, Shield, TrendingUp, Bike, Heart,
+  Briefcase, Shield, Bike, Heart,
   Plus, Minus, Wallet, AlertCircle
 } from 'lucide-react';
 import { kaziProfile, kaziWeeklyData } from '../data/mockData';
