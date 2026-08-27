@@ -25,4 +25,14 @@ export default defineConfig({
     },
   ],
   base: '/',
+  server: {
+    // Proxy API calls to the FastAPI backend so the dev server is same-origin.
+    // Avoids CORS entirely when Vite falls back to a port other than 5173.
+    proxy: {
+      '/api': {
+        target: process.env.VITE_BACKEND_ORIGIN || 'http://localhost:8002',
+        changeOrigin: true,
+      },
+    },
+  },
 })

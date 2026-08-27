@@ -1,12 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Users, Plus, ArrowUpRight, Clock, CheckCircle,
-  Wallet, TrendingUp, ChevronRight, CircleDollarSign, Loader2
+  Wallet, TrendingUp, ChevronRight, CircleDollarSign, Loader2,
+  FileText, CalendarDays, ClipboardList
 } from 'lucide-react';
 import { myChamas, chamaTransactions, chamaLoans, currentUser } from '../data/mockData';
 import { useAuth } from '../hooks/useAuth';
 import { useMyGroups } from '../hooks/useGroups';
 import { formatCurrency, getCountryConfig } from '../lib/country';
+import ConstitutionCard from '../components/chama/ConstitutionCard';
+import RegistryExport from '../components/chama/RegistryExport';
+import MeetingMinutes from '../components/chama/MeetingMinutes';
+
+type ChamaTab = 'chama' | 'constitution' | 'members' | 'minutes';
+
+const TABS: { key: ChamaTab; label: string; icon: typeof Users }[] = [
+  { key: 'chama', label: 'Chama', icon: Users },
+  { key: 'constitution', label: 'Katiba / Constitution', icon: FileText },
+  { key: 'members', label: 'Wanachama / Members', icon: ClipboardList },
+  { key: 'minutes', label: 'Kumbukumbu / Minutes', icon: CalendarDays },
+];
 
 export default function Chama() {
   const { user } = useAuth();
@@ -19,6 +32,15 @@ export default function Chama() {
   const chama = myChamas[activeChama];
   const [showContribute, setShowContribute] = useState(false);
   const [contributeAmount, setContributeAmount] = useState(chama.contributionAmount);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ChamaTab>('chama');
+
+  // Default to the first real group once /groups/my resolves.
+  useEffect(() => {
+    if (!selectedGroupId && apiGroups && apiGroups.length > 0) {
+      setSelectedGroupId(apiGroups[0].id);
+    }
+  }, [apiGroups, selectedGroupId]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -53,7 +75,15 @@ export default function Chama() {
         ) : apiGroups && apiGroups.length > 0 ? (
           <div className="space-y-2">
             {apiGroups.map((g) => (
-              <div key={g.id} className="flex items-center justify-between p-3 rounded-lg bg-bg">
+              <button
+                key={g.id}
+                onClick={() => setSelectedGroupId(g.id)}
+                className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
+                  selectedGroupId === g.id
+                    ? 'bg-ocean/5 border border-ocean/30'
+                    : 'bg-bg border border-transparent hover:border-border'
+                }`}
+              >
                 <div>
                   <p className="text-sm font-medium text-text">{g.name}</p>
                   <p className="text-xs text-text3">
@@ -61,7 +91,7 @@ export default function Chama() {
                   </p>
                 </div>
                 <span className="text-xs px-2 py-1 rounded-full bg-fresh/10 text-fresh">{g.status}</span>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -69,6 +99,38 @@ export default function Chama() {
         )}
       </div>
 
+      {/* Formalization tabs (Sprint 13) */}
+      {selectedGroupId && (
+        <div className="flex flex-wrap gap-2 border-b border-border pb-3">
+          {TABS.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === key
+                  ? 'bg-ocean text-white shadow-sm'
+                  : 'bg-surface text-text2 border border-border hover:text-text'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedGroupId && activeTab === 'constitution' && (
+        <ConstitutionCard groupId={selectedGroupId} />
+      )}
+      {selectedGroupId && activeTab === 'members' && (
+        <RegistryExport groupId={selectedGroupId} />
+      )}
+      {selectedGroupId && activeTab === 'minutes' && (
+        <MeetingMinutes groupId={selectedGroupId} />
+      )}
+
+      {activeTab === 'chama' && (
+        <>
       {/* Chama Selector (mock data) */}
       <div className="flex gap-2">
         {myChamas.map((c, i) => (
@@ -290,6 +352,8 @@ export default function Chama() {
           View All Transactions <ChevronRight className="w-4 h-4 inline" />
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 }
