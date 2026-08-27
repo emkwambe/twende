@@ -218,6 +218,7 @@ class LoanApplicationResponse(BaseModel):
     interest_rate: Decimal
     weekly_payment: Optional[Decimal]
     total_repayment: Optional[Decimal]
+    loan_balance: Decimal = Decimal("0.00")
     status: str
     underwriting_score: Optional[float]
     underwriting_factors: Optional[dict]
@@ -297,6 +298,89 @@ class RegistryExportResponse(BaseModel):
     chair_name: Optional[str]
     treasurer_name: Optional[str]
     members: list[RegistryMemberEntry]
+
+
+# ─── Transactions / Pass Book (Sprint 14) ───────────────────────────────────
+class TransactionResponse(BaseModel):
+    id: UUID
+    member_id: UUID
+    group_id: UUID
+    loan_id: Optional[UUID]
+    transaction_type: str
+    amount: Decimal
+    balance_after: Decimal
+    description: Optional[str]
+    reference: Optional[str]
+    week_number: Optional[int]
+    payment_method: Optional[str]
+    mpesa_receipt: Optional[str]
+    created_at: Optional[Any]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PassbookResponse(BaseModel):
+    member_id: UUID
+    member_name: str
+    group_id: UUID
+    group_name: str
+    national_id: Optional[str]
+    savings_balance: Decimal
+    loan_balance: Decimal
+    transaction_count: int
+    transactions: list[TransactionResponse]
+
+
+class LedgerResponse(BaseModel):
+    group_name: str
+    opening_balance: Decimal
+    total_collections_this_week: Decimal
+    total_disbursements: Decimal
+    total_disbursements_all_time: Decimal
+    closing_balance: Decimal
+    outstanding_loans: int
+    defaulted_loans: int
+    active_members: int
+    last_updated: Optional[Any]
+
+
+# ─── Repayments ─────────────────────────────────────────────────────────────
+class RepaymentCreate(BaseModel):
+    amount: Decimal = Field(..., gt=0)
+    week_number: int = Field(..., ge=1)
+    payment_method: Optional[str] = Field(None, max_length=20)
+    mpesa_receipt: Optional[str] = Field(None, max_length=100)
+
+
+class RepaymentResponse(BaseModel):
+    loan: LoanApplicationResponse
+    transaction: TransactionResponse
+    remaining_balance: Decimal
+    is_on_time: bool
+    message: str
+
+
+# ─── Quarterly report ───────────────────────────────────────────────────────
+class QuarterlyReportResponse(BaseModel):
+    group_name: str
+    period: str
+    period_start: date
+    period_end: date
+    currency: str
+    total_savings: Decimal
+    total_loans_disbursed: Decimal
+    total_repayments_collected: Decimal
+    portfolio_at_risk_pct: float
+    on_time_repayment_rate_pct: float
+    average_loan_size: Decimal
+    loans_issued: int
+    loans_defaulted: int
+    repayments_recorded: int
+    repayments_on_time: int
+    members_at_start: int
+    members_at_end: int
+    member_growth_pct: float
+    generated_at: Optional[Any]
 
 
 # Forward reference resolution

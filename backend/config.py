@@ -1,6 +1,8 @@
 """Application settings for the Twende backend."""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from country_packs import tanzania as tz
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -29,15 +31,16 @@ class Settings(BaseSettings):
     DEMO_OTP: str = "123456"
     DEMO_PIN: str = "1234"
 
-    # Underwriting guardrails
-    DEFAULT_INTEREST_RATE: float = 10.0
-    MIN_WEEKLY_INCOME_TZS: float = 50000.0
-    MAX_LOAN_TO_SAVINGS_RATIO: float = 4.0
-    MAX_DEBT_TO_SAVINGS_RATIO: float = 3.0
-    MIN_PERSONAL_SAVINGS_RATIO: float = 0.15
-    TARGET_DEBT_SERVICE_RATIO: float = 0.25
-    HARD_DEBT_SERVICE_CEILING: float = 0.70
-    MIN_GROUP_GUARANTEE_RATIO: float = 0.30
+    # Underwriting guardrails — defaults from the active country pack,
+    # still overridable per-deployment via environment variables.
+    DEFAULT_INTEREST_RATE: float = tz.DEFAULT_INTEREST_RATE
+    MIN_WEEKLY_INCOME_TZS: float = tz.MIN_WEEKLY_INCOME
+    MAX_LOAN_TO_SAVINGS_RATIO: float = tz.MAX_LOAN_TO_SAVINGS_RATIO
+    MAX_DEBT_TO_SAVINGS_RATIO: float = tz.MAX_DEBT_TO_SAVINGS_RATIO
+    MIN_PERSONAL_SAVINGS_RATIO: float = tz.MIN_PERSONAL_SAVINGS_RATIO
+    TARGET_DEBT_SERVICE_RATIO: float = tz.TARGET_DEBT_SERVICE_RATIO
+    HARD_DEBT_SERVICE_CEILING: float = tz.HARD_DEBT_SERVICE_CEILING
+    MIN_GROUP_GUARANTEE_RATIO: float = tz.MIN_GROUP_GUARANTEE_RATIO
 
     @property
     def allowed_origins_list(self) -> list[str]:

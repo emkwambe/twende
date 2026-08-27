@@ -13,9 +13,19 @@ import auth_service
 from config import settings
 from database import get_db
 from dependencies import get_current_user
+import ledger
 from constitution import generate_constitution
-from models import Constitution, Group, LoanApplication, MeetingMinute, Member, User
+from models import (
+    Constitution,
+    Group,
+    LoanApplication,
+    MeetingMinute,
+    Member,
+    Transaction,
+    User,
+)
 from rbac import (
+    GROUP_ROLE_HIERARCHY,
     GroupRole,
     get_group_membership,
     require_admin,
@@ -24,6 +34,7 @@ from rbac import (
 from schemas import (
     AuthResponse,
     ConstitutionResponse,
+    LedgerResponse,
     GroupCreate,
     GroupResponse,
     KYCSubmitRequest,
@@ -36,11 +47,16 @@ from schemas import (
     MemberCreate,
     MemberResponse,
     OTPVerifyRequest,
+    PassbookResponse,
     PhoneRequest,
     RefreshRequest,
+    QuarterlyReportResponse,
     RegistryExportResponse,
     RegistryMemberEntry,
     RegisterRequest,
+    RepaymentCreate,
+    RepaymentResponse,
+    TransactionResponse,
     UserResponse,
     UserUpdate,
 )
@@ -299,6 +315,26 @@ def apply_for_loan(
     loan.underwriting_factors = result["factors"]
     loan.rejection_reasons = result["critical_failures"] or None
 
+    # An approved loan is disbursed immediately: seed its outstanding balance
+    # and write the disbursement into the group ledger (Sprint 14).
+    if loan.status == "approved":
+        loan.loan_balance = loan.total_repayment or loan.amount
+        ledger.post_transaction(
+            db,
+            member=member,
+            group=group,
+            loan=loan,
+            transaction_type=ledger.LOAN_DISBURSEMENT,
+            amount=loan.amount,
+            description=f"Mkopo umetolewa / Loan disbursed: {loan.purpose}",
+            reference=f"LOAN-{str(loan.id)[:8].upper()}-DISBURSE",
+            payment_method=member.phone_provider,
+            # Cash out is the principal; the debt taken on is principal + interest.
+            debt_delta=loan.loan_balance,
+        )
+    else:
+        loan.loan_balance = Decimal("0.00")
+
     db.commit()
     db.refresh(loan)
 
@@ -349,6 +385,7 @@ def _loan_response(loan: LoanApplication) -> LoanApplicationResponse:
         interest_rate=loan.interest_rate,
         weekly_payment=loan.weekly_payment,
         total_repayment=loan.total_repayment,
+        loan_balance=loan.loan_balance or Decimal("0.00"),
         status=loan.status,
         underwriting_score=loan.underwriting_score,
         underwriting_factors=loan.underwriting_factors,
@@ -582,3 +619,207 @@ def _get_minute_or_404(db: Session, group_id: UUID, minute_id: UUID) -> MeetingM
     if not minute:
         raise HTTPException(status_code=404, detail="Meeting minute not found")
     return minute
+
+
+# ─── Financial Records Engine (Sprint 14) ───────────────────────────────────
+def _require_group_access(
+    db: Session,
+    current_user: User,
+    group_id: UUID,
+    min_role: Optional[str] = None,
+) -> Optional[Member]:
+    """Group-scoped authorisation for routes whose path has no group_id.
+
+    Mirrors rbac.require_group_role, which can only be used as a dependency on
+    routes that take group_id as a path parameter.
+    """
+    if current_user.role == "admin":
+        return None
+
+    membership = (
+        db.query(Member)
+        .filter(Member.group_id == group_id, Member.user_id == current_user.id)
+        .first()
+    )
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a member of this group",
+        )
+    if min_role and GROUP_ROLE_HIERARCHY.get(membership.role, 0) < GROUP_ROLE_HIERARCHY.get(
+        min_role, 0
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{min_role} role or higher required",
+        )
+    return membership
+
+
+# ─── Step 2: Group ledger ───────────────────────────────────────────────────
+@app.get("/api/v1/groups/{group_id}/ledger", response_model=LedgerResponse)
+def get_group_ledger(
+    group_id: UUID,
+    membership: Member = Depends(get_group_membership),
+    db: Session = Depends(get_db),
+):
+    """Weekly cash position for the group treasurer."""
+    group = _get_group_or_404(db, group_id)
+    return LedgerResponse(**ledger.build_ledger(db, group))
+
+
+# ─── Step 3: Member pass book ───────────────────────────────────────────────
+@app.get("/api/v1/members/{member_id}/passbook", response_model=PassbookResponse)
+def get_member_passbook(
+    member_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Digital pass book: every transaction for one member, newest first."""
+    member = db.query(Member).filter(Member.id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    # Your own pass book needs no group role; anyone else needs treasurer or above.
+    is_own = member.user_id is not None and str(member.user_id) == str(current_user.id)
+    _require_group_access(
+        db, current_user, member.group_id, None if is_own else GroupRole.TREASURER
+    )
+
+    transactions = (
+        db.query(Transaction)
+        .filter(Transaction.member_id == member_id)
+        .order_by(Transaction.created_at.desc())
+        .all()
+    )
+    group = db.query(Group).filter(Group.id == member.group_id).first()
+
+    return PassbookResponse(
+        member_id=member.id,
+        member_name=member.full_name,
+        group_id=member.group_id,
+        group_name=group.name if group else "",
+        national_id=member.national_id,
+        savings_balance=member.savings_balance or Decimal("0.00"),
+        loan_balance=member.loan_balance or Decimal("0.00"),
+        transaction_count=len(transactions),
+        transactions=[TransactionResponse.model_validate(t) for t in transactions],
+    )
+
+
+# ─── Step 4: Repayment tracking ─────────────────────────────────────────────
+@app.post("/api/v1/loans/{loan_id}/repayment", response_model=RepaymentResponse)
+def record_repayment(
+    loan_id: UUID,
+    payload: RepaymentCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Record a weekly loan repayment against the member's pass book."""
+    loan = db.query(LoanApplication).filter(LoanApplication.id == loan_id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+
+    member = db.query(Member).filter(Member.id == loan.member_id).first()
+    group = db.query(Group).filter(Group.id == loan.group_id).first()
+    if not member or not group:
+        raise HTTPException(status_code=404, detail="Loan member or group not found")
+
+    is_own = member.user_id is not None and str(member.user_id) == str(current_user.id)
+    _require_group_access(
+        db, current_user, loan.group_id, None if is_own else GroupRole.TREASURER
+    )
+
+    if loan.status not in ("approved", "active", "defaulted"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Loan is not repayable in status {loan.status}",
+        )
+
+    outstanding = ledger.money(loan.loan_balance or Decimal("0.00"))
+    if outstanding <= Decimal("0.00"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Loan is already fully repaid",
+        )
+
+    amount = ledger.money(payload.amount)
+    if amount > outstanding:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Amount exceeds outstanding balance of {outstanding}",
+        )
+
+    reference = f"LOAN-{str(loan.id)[:8].upper()}-WEEK-{payload.week_number}"
+    txn = ledger.post_transaction(
+        db,
+        member=member,
+        group=group,
+        loan=loan,
+        transaction_type=ledger.LOAN_REPAYMENT,
+        amount=amount,
+        description=f"Marejesho wiki {payload.week_number} / Repayment week {payload.week_number}",
+        reference=reference,
+        week_number=payload.week_number,
+        payment_method=payload.payment_method,
+        mpesa_receipt=payload.mpesa_receipt,
+    )
+
+    loan.loan_balance = ledger.money(outstanding - amount)
+    if loan.loan_balance <= Decimal("0.00"):
+        loan.status = "repaid"
+        message = "Mkopo umelipwa kikamilifu / Loan fully repaid"
+    elif ledger.is_defaulted(loan, payload.week_number):
+        loan.status = "defaulted"
+        message = "Mkopo umechelewa / Loan past grace window, marked defaulted"
+    else:
+        loan.status = "active"
+        message = "Malipo yamepokelewa / Repayment recorded"
+
+    db.commit()
+    db.refresh(loan)
+    db.refresh(txn)
+
+    return RepaymentResponse(
+        loan=_loan_response(loan),
+        transaction=TransactionResponse.model_validate(txn),
+        remaining_balance=loan.loan_balance,
+        is_on_time=ledger.is_on_time(loan, txn),
+        message=message,
+    )
+
+
+@app.get("/api/v1/loans/{loan_id}/repayments", response_model=List[TransactionResponse])
+def list_repayments(
+    loan_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    loan = db.query(LoanApplication).filter(LoanApplication.id == loan_id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    _require_group_access(db, current_user, loan.group_id)
+
+    return (
+        db.query(Transaction)
+        .filter(
+            Transaction.loan_id == loan_id,
+            Transaction.transaction_type == ledger.LOAN_REPAYMENT,
+        )
+        .order_by(Transaction.week_number, Transaction.created_at)
+        .all()
+    )
+
+
+# ─── Step 5: Quarterly report ───────────────────────────────────────────────
+@app.get(
+    "/api/v1/groups/{group_id}/reports/quarterly",
+    response_model=QuarterlyReportResponse,
+)
+def get_quarterly_report(
+    group_id: UUID,
+    membership: Member = Depends(get_group_membership),
+    db: Session = Depends(get_db),
+):
+    group = _get_group_or_404(db, group_id)
+    return QuarterlyReportResponse(**ledger.build_quarterly_report(db, group))

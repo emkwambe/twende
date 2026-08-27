@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from config import settings
+from country_packs import tanzania as tz
 from models import Group, LoanApplication, Member
 
 
@@ -38,14 +39,14 @@ class TanzanianUnderwritingEngine:
         # savings_balance * 0.05 is a proxy for weekly cash flow.
         # Floor at TZS 50,000/week (~$19), realistic for the informal sector.
         estimated_weekly_income = max(
-            savings * 0.05, settings.MIN_WEEKLY_INCOME_TZS
+            savings * tz.SAVINGS_TO_WEEKLY_INCOME_RATE, settings.MIN_WEEKLY_INCOME_TZS
         )
 
         # ── 3. Weekly payment for this loan ──────────────────────────────────
         weekly_payment = total_repayment / repayment_weeks if repayment_weeks > 0 else 0.0
 
         # ── 4. Existing weekly debt obligation ───────────────────────────────
-        existing_weekly_debt = loan_balance / 52.0 if loan_balance > 0 else 0.0
+        existing_weekly_debt = loan_balance / tz.WEEKS_PER_YEAR if loan_balance > 0 else 0.0
 
         # ── 5. Debt Service Ratio (DSR) ──────────────────────────────────────
         dsr = (weekly_payment + existing_weekly_debt) / estimated_weekly_income
@@ -61,24 +62,26 @@ class TanzanianUnderwritingEngine:
         group_discipline = savings / max(avg_group_savings, 1.0)
 
         # ── 9. Business Formalization Score (0-15) ───────────────────────────
-        formalization = 0
-        if member.national_id:
-            formalization += 8
-        if member.tin_number:
-            formalization += 4
-        if member.brela_number:
-            formalization += 3
+        formalization = sum(
+            doc["points"]
+            for field, doc in tz.FORMALIZATION_DOCS.items()
+            if getattr(member, field, None)
+        )
 
         # ── 10. Agricultural Seasonality Penalty/Bonus ──────────────────────
         seasonality = 0
         if purpose == "agriculture":
-            if repayment_weeks < 12:
-                seasonality = -5  # unlikely to cover harvest
-            else:
-                seasonality = 5   # covers likely harvest period
+            seasonality = (
+                tz.AGRICULTURE_SHORT_PENALTY
+                if repayment_weeks < tz.AGRICULTURE_MIN_WEEKS
+                else tz.AGRICULTURE_LONG_BONUS
+            )
 
         # ── 11. Scoring (0-100) ──────────────────────────────────────────────
-        mm_flow_points = min(personal_savings_ratio / settings.MIN_PERSONAL_SAVINGS_RATIO, 1.0) * 30
+        mm_flow_points = (
+            min(personal_savings_ratio / settings.MIN_PERSONAL_SAVINGS_RATIO, 1.0)
+            * tz.SCORE_WEIGHTS["mobile_money_flow"]
+        )
 
         # DSR points: full at target ratio, zero at hard ceiling
         dsr_points = max(
@@ -86,24 +89,23 @@ class TanzanianUnderwritingEngine:
             (
                 (settings.HARD_DEBT_SERVICE_CEILING - dsr)
                 / (settings.HARD_DEBT_SERVICE_CEILING - settings.TARGET_DEBT_SERVICE_RATIO)
-            ) * 25,
+            ) * tz.SCORE_WEIGHTS["debt_service"],
         )
 
-        guarantee_points = min(
-            group_guarantee_ratio / settings.MIN_GROUP_GUARANTEE_RATIO, 1.0
-        ) * 20
+        guarantee_points = (
+            min(group_guarantee_ratio / settings.MIN_GROUP_GUARANTEE_RATIO, 1.0)
+            * tz.SCORE_WEIGHTS["group_guarantee"]
+        )
 
         formalization_points = formalization
 
         # Seasonality band: 0-10, with agriculture penalties/bonuses
-        if seasonality > -10:
-            seasonality_points = max(0.0, 10.0 + seasonality)
-        else:
-            seasonality_points = 0.0
+        seasonality_points = max(
+            0.0, float(tz.SCORE_WEIGHTS["seasonality"]) + seasonality
+        )
 
         # Upatu groups get less guarantee credit (no interest accumulation)
-        if group.group_type == "upatu":
-            guarantee_points *= 0.8
+        guarantee_points *= tz.GUARANTEE_MULTIPLIER_BY_GROUP_TYPE.get(group.group_type, 1.0)
 
         total_score = (
             mm_flow_points
@@ -116,9 +118,9 @@ class TanzanianUnderwritingEngine:
         # ── 12. Decision ─────────────────────────────────────────────────────
         if critical_failures:
             decision = "rejected"
-        elif total_score >= 70:
+        elif total_score >= tz.SCORE_APPROVE:
             decision = "approved"
-        elif total_score >= 50:
+        elif total_score >= tz.SCORE_FLAG:
             decision = "flagged"
         else:
             decision = "rejected"

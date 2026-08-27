@@ -124,6 +124,9 @@ class Group(Base):
     meeting_minutes = relationship(
         "MeetingMinute", back_populates="group", cascade="all, delete-orphan"
     )
+    transactions = relationship(
+        "Transaction", back_populates="group", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Group id={self.id} name={self.name} type={self.group_type}>"
@@ -161,6 +164,9 @@ class Member(Base):
     group = relationship("Group", back_populates="members")
     loan_applications = relationship("LoanApplication", back_populates="member")
     mobile_money_statements = relationship("MobileMoneyStatement", back_populates="member")
+    transactions = relationship(
+        "Transaction", back_populates="member", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Member id={self.id} name={self.full_name}>"
@@ -180,6 +186,8 @@ class LoanApplication(Base):
     interest_rate = Column(Numeric(5, 2), default=Decimal("10.00"))
     weekly_payment = Column(Numeric(12, 2), nullable=True)
     total_repayment = Column(Numeric(12, 2), nullable=True)
+    # Outstanding balance on this loan; seeded to total_repayment on disbursement.
+    loan_balance = Column(Numeric(12, 2), nullable=False, default=Decimal("0.00"))
     status = Column(String, default="pending")
     underwriting_score = Column(Float, nullable=True)
     underwriting_factors = Column(JSON, nullable=True)
@@ -190,6 +198,7 @@ class LoanApplication(Base):
 
     member = relationship("Member", back_populates="loan_applications")
     group = relationship("Group", back_populates="loan_applications")
+    transactions = relationship("Transaction", back_populates="loan")
 
     def __repr__(self):
         return f"<LoanApplication id={self.id} amount={self.amount} status={self.status}>"
@@ -263,3 +272,41 @@ class MeetingMinute(Base):
 
     def __repr__(self):
         return f"<MeetingMinute id={self.id} group_id={self.group_id} date={self.meeting_date}>"
+
+
+class Transaction(Base):
+    """Digital pass book entry — replaces the paper VICOBA passbook.
+
+    Every movement of money in a group is one immutable row here; `balance_after`
+    is the member's running savings balance at the moment it was recorded.
+    """
+
+    __tablename__ = "transactions"
+
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    member_id = Column(
+        Uuid(as_uuid=True), ForeignKey("members.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    group_id = Column(
+        Uuid(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    loan_id = Column(
+        Uuid(as_uuid=True), ForeignKey("loan_applications.id"), nullable=True, index=True
+    )
+    # share_purchase, loan_disbursement, loan_repayment, interest_earned, penalty, withdrawal
+    transaction_type = Column(String(20), nullable=False, index=True)
+    amount = Column(Numeric(12, 2), nullable=False)
+    balance_after = Column(Numeric(12, 2), nullable=False, default=Decimal("0.00"))
+    description = Column(String(255), nullable=True)
+    reference = Column(String(100), nullable=True)  # e.g. LOAN-ABC123-WEEK-5
+    week_number = Column(Integer, nullable=True)  # loan repayments only
+    payment_method = Column(String(20), nullable=True)  # mpesa, mixx, cash, bank
+    mpesa_receipt = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
+
+    member = relationship("Member", back_populates="transactions")
+    group = relationship("Group", back_populates="transactions")
+    loan = relationship("LoanApplication", back_populates="transactions")
+
+    def __repr__(self):
+        return f"<Transaction id={self.id} type={self.transaction_type} amount={self.amount}>"
