@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Home, Users, Wallet, Briefcase, Shield, ShoppingBag, Star,
-  Menu, X, Bell, ChevronDown, TrendingUp
+  Menu, X, Bell, ChevronDown, LogOut, TrendingUp
 } from 'lucide-react';
-import { currentUser } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
+import { currentUser as mockUser, trustScoreFactors } from '../data/mockData';
 import { calculateTrustScore } from '../trust/algorithm';
-import { trustScoreFactors } from '../data/mockData';
+import { getCountryConfig } from '../lib/country';
 
 const navItems = [
   { path: '/', label: 'Overview', icon: Home, color: 'text-ocean' },
@@ -19,13 +20,24 @@ const navItems = [
 ];
 
 export default function Layout() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  // Compute real trust score from factors
+  const [showLogout, setShowLogout] = useState(false);
+
+  const displayUser = user || mockUser;
+  const avatar = displayUser.avatar || displayUser.display_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+  const countryCfg = getCountryConfig((displayUser.country as 'KE' | 'TZ') || 'TZ');
+
   const trustResult = calculateTrustScore(trustScoreFactors);
-  const scoreColor = trustResult.score >= 750 ? 'text-yellow-500' : 
-                     trustResult.score >= 650 ? 'text-fresh' : 
+  const scoreColor = trustResult.score >= 750 ? 'text-yellow-500' :
+                     trustResult.score >= 650 ? 'text-fresh' :
                      trustResult.score >= 500 ? 'text-sunrise' : 'text-coral';
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden">
@@ -96,17 +108,34 @@ export default function Layout() {
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3">
+        <div className="p-4 border-t border-border relative">
+          <button
+            onClick={() => setShowLogout(!showLogout)}
+            className="w-full flex items-center gap-3"
+          >
             <div className="w-9 h-9 rounded-full bg-sunrise flex items-center justify-center text-white text-sm font-bold">
-              {currentUser.avatar}
+              {avatar}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text truncate">{currentUser.name}</p>
-              <p className="text-xs text-text3">KYC Tier {currentUser.kycTier}</p>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-medium text-text truncate">
+                {(displayUser as any).name || displayUser.display_name}
+              </p>
+              <p className="text-xs text-text3">
+                KYC Tier {displayUser.kyc_tier || (displayUser as any).kycTier} · {countryCfg.name}
+              </p>
             </div>
-            <ChevronDown className="w-4 h-4 text-text3" />
-          </div>
+            <ChevronDown className={`w-4 h-4 text-text3 transition-transform ${showLogout ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="absolute bottom-full left-4 right-4 mb-2 flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg shadow-sm text-sm text-coral hover:bg-bg"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </button>
+          )}
         </div>
       </aside>
 
@@ -126,7 +155,7 @@ export default function Layout() {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral rounded-full" />
           </button>
           <div className="w-8 h-8 rounded-full bg-sunrise flex items-center justify-center text-white text-xs font-bold">
-            {currentUser.avatar}
+            {avatar}
           </div>
         </header>
 

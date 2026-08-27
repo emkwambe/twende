@@ -2,33 +2,50 @@ import {
   Users, Wallet, Briefcase, Shield, ShoppingBag,
   TrendingUp, ArrowUpRight, Activity
 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import {
-  currentUser, platformStats, recentActivity, myChamas,
+  currentUser as mockUser, platformStats, recentActivity, myChamas,
   biasharaProfile, lindaPolicies, sokoStore
 } from '../data/mockData';
-
-const statCards = [
-  { label: 'Chama Balance', value: `KES ${(myChamas[0].myBalance + myChamas[1].myBalance).toLocaleString()}`, icon: Users, color: 'bg-ocean', change: '+12%' },
-  { label: 'Available Credit', value: `KES ${biasharaProfile.availableCredit.toLocaleString()}`, icon: Wallet, color: 'bg-sunrise', change: '+8%' },
-  { label: 'Insurance Coverage', value: `KES ${(lindaPolicies.reduce((a, p) => a + p.coverage, 0)).toLocaleString()}`, icon: Shield, color: 'bg-linda', change: 'Active' },
-  { label: 'Soko Revenue', value: `KES ${sokoStore.monthlyRevenue.toLocaleString()}`, icon: ShoppingBag, color: 'bg-soko', change: '+23%' },
-];
-
-const products = [
-  { name: 'Chama', desc: 'Community savings', status: 'Active', color: 'ocean', enrolled: currentUser.hasChama },
-  { name: 'Biashara', desc: 'Business credit', status: 'KES 25K loan active', color: 'sunrise', enrolled: currentUser.hasBiashara },
-  { name: 'Kazi', desc: 'Gig worker services', status: 'Not enrolled', color: 'kazi', enrolled: currentUser.hasKazi },
-  { name: 'Linda', desc: 'Insurance cover', status: '3 policies active', color: 'linda', enrolled: currentUser.hasLinda },
-  { name: 'Soko', desc: 'Commerce', status: '127 orders', color: 'soko', enrolled: currentUser.hasSoko },
-];
+import { formatCurrency, getCountryConfig } from '../lib/country';
 
 export default function Home() {
+  const { user } = useAuth();
+  const displayUser = user || mockUser;
+  const countryCfg = getCountryConfig((displayUser.country as 'KE' | 'TZ') || 'TZ');
+
+  const firstName = displayUser.display_name?.split(' ')[0] || displayUser.name?.split(' ')[0] || 'User';
+
+  // Build stat cards using the user's local currency
+  const statCards = [
+    { label: 'Chama Balance', value: formatCurrency(myChamas[0].myBalance + myChamas[1].myBalance, countryCfg.code), icon: Users, color: 'bg-ocean', change: '+12%' },
+    { label: 'Available Credit', value: formatCurrency(biasharaProfile.availableCredit, countryCfg.code), icon: Wallet, color: 'bg-sunrise', change: '+8%' },
+    { label: 'Insurance Coverage', value: formatCurrency(lindaPolicies.reduce((a, p) => a + p.coverage, 0), countryCfg.code), icon: Shield, color: 'bg-linda', change: 'Active' },
+    { label: 'Soko Revenue', value: formatCurrency(sokoStore.monthlyRevenue, countryCfg.code), icon: ShoppingBag, color: 'bg-soko', change: '+23%' },
+  ];
+
+  // Use real credit score from the authenticated user; fallback to mock history
+  const currentScore = displayUser.credit_score || biasharaProfile.creditHistory.at(-1)?.score || 650;
+  const creditHistory = biasharaProfile.creditHistory.slice(0, -1).concat([
+    { month: 'Now', score: currentScore }
+  ]);
+
+  const products = [
+    { name: 'Chama', desc: 'Community savings', status: 'Active', color: 'ocean', enrolled: mockUser.hasChama },
+    { name: 'Biashara', desc: 'Business credit', status: `${countryCfg.currencySymbol} 25K loan active`, color: 'sunrise', enrolled: mockUser.hasBiashara },
+    { name: 'Kazi', desc: 'Gig worker services', status: 'Not enrolled', color: 'kazi', enrolled: mockUser.hasKazi },
+    { name: 'Linda', desc: 'Insurance cover', status: '3 policies active', color: 'linda', enrolled: mockUser.hasLinda },
+    { name: 'Soko', desc: 'Commerce', status: '127 orders', color: 'soko', enrolled: mockUser.hasSoko },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-text">Welcome back, {currentUser.name.split(' ')[0]}</h1>
-        <p className="text-text2 text-sm mt-1">Here's your financial wellness overview</p>
+        <h1 className="text-2xl font-bold text-text">Welcome back, {firstName}</h1>
+        <p className="text-text2 text-sm mt-1">
+          {countryCfg.name} · KYC Tier {displayUser.kyc_tier || mockUser.kycTier} · Trust Score {currentScore}
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -64,7 +81,7 @@ export default function Home() {
             </div>
           </div>
           <div className="h-48 flex items-end gap-3">
-            {biasharaProfile.creditHistory.map((item, i) => {
+            {creditHistory.map((item, i) => {
               const height = ((item.score - 300) / 550) * 100;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -89,8 +106,8 @@ export default function Home() {
           <div className="mt-4 p-3 bg-fresh/10 rounded-lg flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-fresh" />
             <div>
-              <p className="text-sm font-medium text-text">Score improved by 70 points</p>
-              <p className="text-xs text-text2">Consistent chama contributions and Soko sales boosted your rating</p>
+              <p className="text-sm font-medium text-text">Score: {currentScore}</p>
+              <p className="text-xs text-text2">Based on your {countryCfg.name} account activity</p>
             </div>
           </div>
         </div>

@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import {
   Users, Plus, ArrowUpRight, Clock, CheckCircle,
-  Wallet, TrendingUp, ChevronRight, CircleDollarSign
+  Wallet, TrendingUp, ChevronRight, CircleDollarSign, Loader2
 } from 'lucide-react';
 import { myChamas, chamaTransactions, chamaLoans, currentUser } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
+import { useMyGroups } from '../hooks/useGroups';
+import { formatCurrency, getCountryConfig } from '../lib/country';
 
 export default function Chama() {
+  const { user } = useAuth();
+  const { data: apiGroups, isLoading, error } = useMyGroups();
+
+  const countryCode = (user?.country as 'KE' | 'TZ') || 'TZ';
+  const countryCfg = getCountryConfig(countryCode);
+
   const [activeChama, setActiveChama] = useState(0);
   const chama = myChamas[activeChama];
   const [showContribute, setShowContribute] = useState(false);
@@ -18,7 +27,7 @@ export default function Chama() {
         <div>
           <h1 className="text-2xl font-bold text-text flex items-center gap-2">
             <Users className="w-6 h-6 text-ocean" />
-            Twende Chama
+            Twende {countryCfg.groupTypeDefault === 'chama' ? 'Chama' : 'VICOBA'}
           </h1>
           <p className="text-text2 text-sm mt-1">Community savings, transparent and digital</p>
         </div>
@@ -31,7 +40,36 @@ export default function Chama() {
         </button>
       </div>
 
-      {/* Chama Selector */}
+      {/* Real groups from API */}
+      <div className="bg-surface rounded-xl border border-border p-5">
+        <h3 className="text-sm font-semibold text-text mb-3">Your groups ({countryCfg.name})</h3>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-text2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading groups...
+          </div>
+        ) : error ? (
+          <p className="text-sm text-coral">Failed to load groups.</p>
+        ) : apiGroups && apiGroups.length > 0 ? (
+          <div className="space-y-2">
+            {apiGroups.map((g) => (
+              <div key={g.id} className="flex items-center justify-between p-3 rounded-lg bg-bg">
+                <div>
+                  <p className="text-sm font-medium text-text">{g.name}</p>
+                  <p className="text-xs text-text3">
+                    {g.group_type} · {g.member_count} members · {formatCurrency(Number(g.total_savings), countryCode)}
+                  </p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-fresh/10 text-fresh">{g.status}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text2">You are not a member of any group yet.</p>
+        )}
+      </div>
+
+      {/* Chama Selector (mock data) */}
       <div className="flex gap-2">
         {myChamas.map((c, i) => (
           <button
@@ -55,15 +93,15 @@ export default function Chama() {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-xs text-text3 mb-1">Group Balance</p>
-              <p className="text-lg font-bold text-text">KES {chama.totalBalance.toLocaleString()}</p>
+              <p className="text-lg font-bold text-text">{formatCurrency(chama.totalBalance, countryCode)}</p>
             </div>
             <div>
               <p className="text-xs text-text3 mb-1">Your Share</p>
-              <p className="text-lg font-bold text-text">KES {chama.myBalance.toLocaleString()}</p>
+              <p className="text-lg font-bold text-text">{formatCurrency(chama.myBalance, countryCode)}</p>
             </div>
           </div>
           <div className="mb-4">
-            <label className="text-sm font-medium text-text mb-2 block">Amount (KES)</label>
+            <label className="text-sm font-medium text-text mb-2 block">Amount ({countryCfg.currency})</label>
             <input
               type="number"
               value={contributeAmount}
@@ -79,7 +117,7 @@ export default function Chama() {
                     contributeAmount === amt ? 'bg-fresh text-white' : 'bg-bg text-text2 hover:text-text'
                   }`}
                 >
-                  KES {amt}
+                  {countryCfg.currencySymbol} {amt}
                 </button>
               ))}
             </div>
@@ -111,7 +149,7 @@ export default function Chama() {
             <Wallet className="w-4 h-4 text-ocean" />
             <span className="text-xs text-text3">Total Savings</span>
           </div>
-          <p className="text-xl font-bold text-text">KES {chama.totalBalance.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">{formatCurrency(chama.totalBalance, countryCode)}</p>
         </div>
         <div className="bg-surface rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
@@ -154,18 +192,18 @@ export default function Chama() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl font-bold text-ocean">{chama.progress}%</span>
-                <span className="text-xs text-text3">of KES {chama.monthlyTarget.toLocaleString()}</span>
+                <span className="text-xs text-text3">of {formatCurrency(chama.monthlyTarget, countryCode)}</span>
               </div>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-text3">Collected</span>
-              <span className="font-medium text-text">KES {(chama.monthlyTarget * chama.progress / 100).toLocaleString()}</span>
+              <span className="font-medium text-text">{formatCurrency(chama.monthlyTarget * chama.progress / 100, countryCode)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-text3">Remaining</span>
-              <span className="font-medium text-text">KES {(chama.monthlyTarget * (100 - chama.progress) / 100).toLocaleString()}</span>
+              <span className="font-medium text-text">{formatCurrency(chama.monthlyTarget * (100 - chama.progress) / 100, countryCode)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-text3">Next due</span>
@@ -205,7 +243,7 @@ export default function Chama() {
                     </div>
                   </div>
                   <span className="text-xs font-medium text-text">
-                    KES {loan.repaid.toLocaleString()} / {loan.total.toLocaleString()}
+                    {formatCurrency(loan.repaid, countryCode)} / {formatCurrency(loan.total, countryCode)}
                   </span>
                 </div>
                 {loan.status === 'active' && (
@@ -243,7 +281,7 @@ export default function Chama() {
                 tx.type === 'penalty' ? 'text-coral' : 'text-text'
               }`}>
                 {tx.type === 'contribution' || tx.type === 'loan_repayment' ? '+' : ''}
-                KES {tx.amount.toLocaleString()}
+                {formatCurrency(tx.amount, countryCode)}
               </span>
             </div>
           ))}
