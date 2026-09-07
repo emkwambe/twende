@@ -438,6 +438,14 @@ The Trust Engine's fairness framework is designed to satisfy the regulatory requ
 
 ## 8. Implementation and Deployment
 
+### 8.0 Current Implementation Status
+
+The architecture described in this section is the target state. As of the Tanzania pilot, the XGBoost model, SHAP service, feature store and event processor are **not yet deployed**, and no loan decision is currently made by the model specified in this paper.
+
+Loan approvals are instead produced by a rule-based **Tanzania Underwriting Engine** (`backend/underwriting.py`), which assesses point-in-time affordability for a specific loan application rather than longitudinal borrower creditworthiness. It is specified in full in the companion document *The Tanzania Underwriting Engine* (`docs/UNDERWRITING_ENGINE.md`), including its factor set, decision thresholds, and a documented score-inflation defect.
+
+The two systems are designed to compose rather than compete: the Trust Score determines the tier a borrower qualifies for (§4.2), while the underwriting engine determines whether a given request within that tier is affordable at the moment it is made. That composition is not yet wired — see UNDERWRITING_ENGINE.md §7. The pilot's repayment outcomes are the source of the labelled default data this paper's model requires for training.
+
 ### 8.1 Technology Stack
 
 The Trust Engine is implemented as a set of microservices within the TWENDE platform architecture:

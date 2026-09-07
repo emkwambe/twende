@@ -399,7 +399,15 @@ The Trust Engine implements fairness at three levels, addressing the documented 
 
 **Level 3 — Automated Bias Auditing:** A monthly pipeline generates reports on score distribution by gender, geography, and age cohort. Thresholds: <10 point mean difference by gender, <15 points by urban/rural, disparate impact ratio >0.8 for all protected groups. Violations trigger automatic model retraining.
 
-### 4.6 Performance Benchmarks
+### 4.6 Current Implementation Status
+
+The specification above is the target state. During the Tanzania pilot, loan decisions are made by a rule-based **Tanzania Underwriting Engine** (`backend/underwriting.py`) rather than by the XGBoost model — a deliberate sequencing choice, since the 7-factor model requires 12+ months of cross-pillar behavioural history that no pilot borrower has yet accumulated, and the pilot's own repayment outcomes are what generate the labelled training data the model needs.
+
+That engine scores a **specific loan application** (0-100, three-way decision) on affordability grounds — debt service ratio, VICOBA 4x rule, NIDA/TIN/BRELA formalization, group guarantee with an Upatu discount, and agricultural seasonality — where the Trust Engine scores a **borrower** (300-850, four tiers) on behavioural history. The two are designed to compose: tier gates the offer, underwriting gates the disbursement.
+
+It is specified in full, including a documented score-inflation defect and its integration gaps, in `docs/UNDERWRITING_ENGINE.md`.
+
+### 4.7 Performance Benchmarks
 
 | Metric | Target | Current (Frontend) | Production (Post-Backend) |
 | --- | --- | --- | --- |
