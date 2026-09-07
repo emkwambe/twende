@@ -16,8 +16,8 @@ export const COUNTRY_CONFIG: Record<CountryCode, CountryConfig> = {
   KE: {
     code: 'KE',
     name: 'Kenya',
-    currency: 'KES',
-    currencySymbol: 'KSh',
+    currency: 'TZS',
+    currencySymbol: 'TZS',
     phonePrefix: '+254',
     idLabel: 'Huduma Namba',
     idPlaceholder: '12345678',
