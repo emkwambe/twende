@@ -12,7 +12,7 @@ interface GigPostingFormProps {
   onCancel?: () => void;
 }
 
-export default function GigPostingForm({ onSubmit, onCancel }: GigPostingFormProps) {
+export default function GigPostingForm({ onSubmit, onCancel: _onCancel }: GigPostingFormProps) {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

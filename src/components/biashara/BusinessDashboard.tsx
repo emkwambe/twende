@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
-  TrendingUp, TrendingDown, DollarSign, ShoppingBag, Wallet,
-  ArrowUpRight, ArrowDownRight, Activity, Target, PiggyBank, Truck, FileText
+  TrendingUp, DollarSign, ShoppingBag, Wallet,
+  ArrowUpRight, Activity, Target, PiggyBank, Truck, FileText
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { businessMetrics, activeLoans, savingsGoals, suppliers } from '../../data/mockData';
 import { calculateTrustScore } from '../../trust/algorithm';
 import { trustScoreFactors } from '../../data/mockData';
@@ -20,7 +20,6 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
 
   const totalRevenue = businessMetrics.daily.reduce((sum, d) => sum + d.revenue, 0);
   const totalExpenses = businessMetrics.daily.reduce((sum, d) => sum + d.expenses, 0);
-  const totalProfit = totalRevenue - totalExpenses;
 
   const chartData = businessMetrics.daily.map((d, i) => ({
     day: `${i + 1}`,

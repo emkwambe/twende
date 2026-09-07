@@ -1,7 +1,7 @@
 // TWENDE Kazi v2 — Gig Card Component
 // Sprint 08: Gig Worker Platform SDK
 
-import { MapPin, Clock, DollarSign, Zap, CheckCircle, Star, Calendar } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Zap, CheckCircle, Calendar } from 'lucide-react';
 import type { Gig } from '../../kazi/types';
 
 interface GigCardProps {

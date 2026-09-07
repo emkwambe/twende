@@ -3,11 +3,10 @@
 
 import { useState } from 'react';
 import {
-  Plus, FileText, Users, Clock, CheckCircle, XCircle, Eye
+  Plus, Users, CheckCircle, XCircle, Eye
 } from 'lucide-react';
 import type { Gig } from '../../kazi/types';
 import { gigs, gigApplications, workerProfiles } from '../../kazi/mockData';
-import WorkerProfileCard from './WorkerProfileCard';
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState<'posted' | 'applicants' | 'hired'>('posted');

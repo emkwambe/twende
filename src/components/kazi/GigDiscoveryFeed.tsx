@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import {
-  Search, Filter, MapPin, SlidersHorizontal, X
+  Search, SlidersHorizontal
 } from 'lucide-react';
 import GigCard from './GigCard';
 import {
@@ -18,7 +18,7 @@ export default function GigDiscoveryFeed() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'match' | 'newest' | 'pay' | 'distance'>('match');
-  const [appliedGigs, setAppliedGigs] = useState<Set<string>>(new Set());
+  const [, setAppliedGigs] = useState<Set<string>>(new Set());
 
   const filteredGigs = useMemo(() => {
     let result = gigs.filter((g) => g.status === 'published');

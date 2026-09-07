@@ -18,11 +18,11 @@ export default function CheckoutForm() {
   const [step, setStep] = useState<'address' | 'delivery' | 'payment' | 'processing' | 'success'>('address');
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'vendor_delivery' | 'courier'>('courier');
   const [address, setAddress] = useState({
-    name: currentUser.name,
+    name: currentUser.display_name,
     phone: currentUser.phone,
     address: 'Kawangware, House 12',
   });
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [, setIsProcessing] = useState(false);
   const [mpesaPhone, setMpesaPhone] = useState(currentUser.phone);
 
   const cartItems = initialCart.items;

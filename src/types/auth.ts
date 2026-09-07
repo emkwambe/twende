@@ -45,6 +45,7 @@ export interface LoginCredentials {
 export interface RegisterRequest {
   phone: string;
   pin: string;
+  country: 'KE' | 'TZ';
   kyc: KYCData;
 }
 

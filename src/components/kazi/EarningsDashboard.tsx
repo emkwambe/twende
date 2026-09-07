@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, PiggyBank, Shield } from 'lucide-react';
+import { Wallet, TrendingUp, DollarSign, PiggyBank, Shield } from 'lucide-react';
 import { weeklyEarnings, monthlyEarnings } from '../../kazi/mockData';
 import { calculateGigPayment } from '../../kazi/algorithm';
 
@@ -90,7 +90,7 @@ export default function EarningsDashboard() {
               <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
               <Tooltip
                 contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '12px' }}
-                formatter={(value: number) => [`KES ${value.toLocaleString()}`, 'Earnings']}
+                formatter={(value) => [`KES ${Number(value).toLocaleString()}`, 'Earnings']}
               />
               <Bar dataKey="earnings" fill="#1ABC9C" radius={[4, 4, 0, 0]} />
             </BarChart>

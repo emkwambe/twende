@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Wallet, Building2, FileText, Calculator, Truck, Target, ChevronRight
+  Wallet, Building2, FileText, Calculator, Truck, Target
 } from 'lucide-react';
 import { calculateTrustScore } from '../trust/algorithm';
 import { trustScoreFactors, activeLoans } from '../data/mockData';

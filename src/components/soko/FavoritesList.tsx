@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, X } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { sokoProducts, sokoFavorites } from '../../data/mockData';
 

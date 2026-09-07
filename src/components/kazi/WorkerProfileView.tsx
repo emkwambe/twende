@@ -1,7 +1,7 @@
 // TWENDE Kazi v2 — Worker Profile View
 // Sprint 08: Gig Worker Platform SDK
 
-import { Star, MapPin, CheckCircle, Briefcase, Clock, Award, Languages, DollarSign } from 'lucide-react';
+import { Star, MapPin, CheckCircle, Clock, Award, Languages, DollarSign } from 'lucide-react';
 import type { WorkerProfile } from '../../kazi/types';
 
 interface WorkerProfileViewProps {

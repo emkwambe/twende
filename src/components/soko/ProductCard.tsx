@@ -1,7 +1,7 @@
 // TWENDE Soko Commerce v2 — Reusable Product Card
 // Sprint 10: Marketplace
 
-import { ShoppingCart, Heart, Share2, Star, Check } from 'lucide-react';
+import { ShoppingCart, Heart, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { SokoProduct } from '../../soko/types';
 import { sokoFavorites } from '../../data/mockData';

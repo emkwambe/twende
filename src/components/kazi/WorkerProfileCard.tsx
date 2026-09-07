@@ -11,8 +11,6 @@ interface WorkerProfileCardProps {
 }
 
 export default function WorkerProfileCard({ worker, onSelect, variant = 'default' }: WorkerProfileCardProps) {
-  const verifiedSkills = worker.skills.filter((s) => s.isVerified).length;
-  const totalSkills = worker.skills.length;
 
   if (variant === 'compact') {
     return (

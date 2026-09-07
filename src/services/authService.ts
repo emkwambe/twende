@@ -1,6 +1,7 @@
 import api from '../lib/api';
 import type {
   AuthResponse,
+  AuthTokens,
   LoginCredentials,
   OTPVerification,
   RegisterRequest,
@@ -58,7 +59,7 @@ export const authService = {
     }
   },
 
-  getTokens(): { access_token: string; refresh_token: string } | null {
+  getTokens(): AuthTokens | null {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
     try {

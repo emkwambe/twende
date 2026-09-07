@@ -77,7 +77,8 @@ export function calculateReducingBalanceSchedule(
   principal: number,
   annualRate: number,
   tenureWeeks: number,
-  repaymentFrequency: RepaymentFrequency = 'weekly'
+  // Only weekly schedules are implemented; the parameter is kept for API stability.
+  _repaymentFrequency: RepaymentFrequency = 'weekly'
 ): RepaymentSchedule {
   const weeklyRate = annualRate / 52;
   
@@ -111,7 +112,6 @@ export function calculateReducingBalanceSchedule(
   }
   
   const totalInterest = schedule.reduce((sum, i) => sum + i.interest, 0);
-  const totalRepayment = schedule.reduce((sum, i) => sum + i.installment, 0);
   
   // Regulatory cap: total interest cannot exceed 100% of principal
   const cappedTotalInterest = Math.min(totalInterest, principal);

@@ -3,7 +3,7 @@
 
 import { Link } from 'react-router-dom';
 import {
-  Package, Truck, CheckCircle, Clock, MapPin, ChevronRight, ShoppingBag
+  Package, Truck, CheckCircle, Clock, MapPin
 } from 'lucide-react';
 import { sokoOrders, vendorStorefronts } from '../../data/mockData';
 

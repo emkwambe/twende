@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ShoppingCart as CartIcon, Trash2, Minus, Plus, ArrowRight, Tag, X
+  ShoppingCart as CartIcon, Trash2, Minus, Plus, ArrowRight, Tag
 } from 'lucide-react';
 import {
   sokoProducts,
@@ -31,7 +31,7 @@ export default function ShoppingCart() {
 
   const subtotal = cartProducts.reduce((sum, { item, product }) => {
     const variantAdj = item.variant
-      ? (product.variants?.find((v) => v.name === item.variant.name)?.options.find((o) => o.value === item.variant?.value)?.priceAdjustment || 0)
+      ? (product.variants?.find((v) => v.name === item.variant?.name)?.options.find((o) => o.value === item.variant?.value)?.priceAdjustment || 0)
       : 0;
     return sum + (product.price + variantAdj) * item.quantity;
   }, 0);

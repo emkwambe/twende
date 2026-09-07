@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Calculator, Share2, Copy, CheckCircle } from 'lucide-react';
+import { Calculator, Copy, CheckCircle } from 'lucide-react';
 import { calculateSchedule, getLoanProduct } from '../../biashara/calculations';
-import type { LoanProduct } from '../../biashara/types';
 
 export default function LoanCalculator() {
   const [amount, setAmount] = useState(50000);

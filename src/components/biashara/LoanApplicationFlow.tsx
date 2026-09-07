@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Wallet, Package, AlertTriangle, CheckCircle, ChevronRight,
-  Calculator, FileText, TrendingUp
+  Calculator
 } from 'lucide-react';
 import type { LoanProduct } from '../../biashara/types';
 import { calculateSchedule, getTierInterestRate, getTierMaxAmount } from '../../biashara/calculations';

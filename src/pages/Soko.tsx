@@ -1,7 +1,7 @@
 // TWENDE Soko Commerce v2 — Marketplace Page
 // Sprint 10: Replaces old vendor-centric Soko with full marketplace
 
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import MarketplaceHome from '../components/soko/MarketplaceHome';
 import VendorStorefront from '../components/soko/VendorStorefront';
 import ProductDetail from '../components/soko/ProductDetail';
@@ -12,8 +12,6 @@ import FavoritesList from '../components/soko/FavoritesList';
 import FlashSalePage from '../components/soko/FlashSalePage';
 
 export default function Soko() {
-  const location = useLocation();
-  const isRoot = location.pathname === '/soko';
 
   return (
     <div className="animate-fade-in">

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import {
-  Briefcase, User, Search, Building2, Wallet, Star, Plus
+  Briefcase, User, Search, Building2, Wallet, Plus
 } from 'lucide-react';
 import GigDiscoveryFeed from '../components/kazi/GigDiscoveryFeed';
 import WorkerProfileView from '../components/kazi/WorkerProfileView';

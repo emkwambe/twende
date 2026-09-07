@@ -14,7 +14,7 @@ export default function Home() {
   const displayUser = user || mockUser;
   const countryCfg = getCountryConfig((displayUser.country as 'KE' | 'TZ') || 'TZ');
 
-  const firstName = displayUser.display_name?.split(' ')[0] || displayUser.name?.split(' ')[0] || 'User';
+  const firstName = displayUser.display_name?.split(' ')[0] || 'User';
 
   // Build stat cards using the user's local currency
   const statCards = [
@@ -44,7 +44,7 @@ export default function Home() {
       <div>
         <h1 className="text-2xl font-bold text-text">Welcome back, {firstName}</h1>
         <p className="text-text2 text-sm mt-1">
-          {countryCfg.name} · KYC Tier {displayUser.kyc_tier || mockUser.kycTier} · Trust Score {currentScore}
+          {countryCfg.name} · KYC Tier {displayUser.kyc_tier} · Trust Score {currentScore}
         </p>
       </div>
 

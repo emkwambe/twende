@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  Star, MapPin, Clock, CheckCircle, Users, Phone, Share2, Heart,
-  ChevronLeft, ShoppingBag
+  Star, MapPin, Clock, CheckCircle, Phone, Share2, ChevronLeft, ShoppingBag
 } from 'lucide-react';
 import ProductCard from './ProductCard';
 import CategoryFilter from './CategoryFilter';
@@ -20,7 +19,7 @@ export default function VendorStorefront() {
   const { slug } = useParams<{ slug: string }>();
   const [activeCategory, setActiveCategory] = useState('all');
   const [isFollowing, setIsFollowing] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const [, setCartCount] = useState(0);
 
   const store = vendorStorefronts.find((s) => s.slug === slug);
 

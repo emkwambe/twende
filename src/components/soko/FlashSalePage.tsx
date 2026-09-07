@@ -3,7 +3,7 @@
 
 import { Zap, Timer } from 'lucide-react';
 import ProductCard from './ProductCard';
-import FlashSaleBanner, { useCountdown } from './FlashSaleBanner';
+import { useCountdown } from './FlashSaleBanner';
 import {
   sokoProducts,
   flashSale,

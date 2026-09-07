@@ -1,12 +1,35 @@
+import type { User } from '../types/auth';
+
 // TWENDE Mock Data Store
-export const currentUser = {
+// Shaped to match the API's User contract (snake_case) so that the common
+// `user || currentUser` fallback yields a single type rather than a union.
+// The has* pillar flags and creditTier are demo-only extras with no API
+// counterpart yet.
+export const currentUser: User & {
+  creditTier: string;
+  memberSince: string;
+  hasChama: boolean;
+  hasBiashara: boolean;
+  hasKazi: boolean;
+  hasLinda: boolean;
+  hasSoko: boolean;
+} = {
   id: 'u1',
-  name: 'Wanjiku M.',
-  phone: '+254712345678',
-  kycTier: 2,
-  creditScore: 650,
-  creditTier: 'Gold',
+  phone: '+255712345678',
+  display_name: 'Wanjiku M.',
+  email: null,
+  kyc_tier: 2,
+  kyc_verified_at: '2025-11-20T09:00:00Z',
+  national_id: null,
+  date_of_birth: null,
+  credit_score: 650,
   avatar: 'WM',
+  role: 'user',
+  country: 'TZ',
+  status: 'active',
+  created_at: '2025-11-15T08:00:00Z',
+  updated_at: '2026-09-01T08:00:00Z',
+  creditTier: 'Gold',
   memberSince: '2025-11-15',
   hasChama: true,
   hasBiashara: true,
