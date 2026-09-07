@@ -189,10 +189,11 @@ export const sokoListings = [
 // TRUST ENGINE DATA (Sprint 05)
 export const trustScoreFactors = {
   chama: {
-    contributionConsistency: 85,   // 85% on-time contributions
-    savingsVolume: 72,              // KES 108K saved across chamas
-    groupTenure: 18,                // 18 months in chamas
-    leadershipRole: true,           // Treasurer of Mbele Savings
+    contributionConsistency: 85,               // 85% on-time contributions
+    contributionRelativeToChamaMedian: 100,    // contributes at the group median
+    groupTenureMonths: 18,                     // 18 months in chamas
+    leadershipRole: true,                      // Treasurer of Mbele Savings
+    chamaMemberCount: 22,                      // Mbele Savings group size
   },
   mpesa: {
     transactionVolume: 65,           // Moderate monthly volume

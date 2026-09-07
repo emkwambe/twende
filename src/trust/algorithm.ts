@@ -8,6 +8,7 @@ import type {
   TrustScoreResult,
   ScoreHistoryPoint,
   FeatureFlags,
+  LoanEligibility,
 } from './types';
 import {
   TIER_CONFIG,
@@ -17,24 +18,28 @@ import {
 
 // ─── 1. CHAMA SAVINGS BEHAVIOR (20% weight) ───────────────────────────────
 
+// Normalized behavioural calibration: contribution amount enters only as a
+// ratio to the group's own median, never as an absolute figure. A member of a
+// TZS 50,000 chama and a member of a TZS 500,000 chama who are equally
+// reliable therefore score the same, so the factor cannot act as a wealth
+// proxy. See docs/CHAMA_CREDIT_CALIBRATION_ANALYSIS.md §6.
 export function calculateChamaScore(factors: TrustScoreFactors['chama']): number {
   let score = 0;
 
-  // Contribution consistency (40% of chama score)
-  score += factors.contributionConsistency * 0.40;
+  // Relative contribution consistency (45%) — the core behavioural signal
+  score += Math.min(factors.contributionConsistency, 100) * 0.45;
 
-  // Savings volume (30% of chama score)
-  score += Math.min(factors.savingsVolume, 100) * 0.30;
+  // Contribution normalized to the chama median (15%) — at or above median = 100
+  score += Math.min(factors.contributionRelativeToChamaMedian, 100) * 0.15;
 
-  // Group tenure (20% of chama score)
-  score += Math.min(factors.groupTenure, 100) * 0.20;
+  // Group tenure (20%) — diminishing returns past 24 months
+  score += Math.min((factors.groupTenureMonths / 24) * 100, 100) * 0.20;
 
-  // Leadership bonus (10% of chama score, or +15 points flat)
-  if (factors.leadershipRole) {
-    score += 15; // Flat bonus for officers
-  } else {
-    score += factors.groupTenure * 0.10; // Regular members get tenure points
-  }
+  // Leadership role (15%) — officers are elected, so peer-validated
+  score += (factors.leadershipRole ? 100 : 0) * 0.15;
+
+  // Chama size (5%) — larger groups demand stronger social coordination
+  score += Math.min((factors.chamaMemberCount / 20) * 100, 100) * 0.05;
 
   return Math.min(Math.round(score), 100);
 }
@@ -347,11 +352,14 @@ export interface SimulatorScenario {
 
 export const SIMULATOR_SCENARIOS: SimulatorScenario[] = [
   {
-    name: 'Increase Chama Savings',
-    description: 'Save KES 5,000 more monthly in your chama',
+    name: 'Contribute On Time',
+    description: 'Pay every chama contribution on time for the next 3 months',
     apply: (f) => ({
       ...f,
-      chama: { ...f.chama, savingsVolume: Math.min(100, f.chama.savingsVolume + 15) },
+      chama: {
+        ...f.chama,
+        contributionConsistency: Math.min(100, f.chama.contributionConsistency + 15),
+      },
     }),
   },
   {
@@ -470,7 +478,7 @@ export function calculateLoanEligibility(
   product: string = 'biashara',
   requestedAmount?: number,
   requestedTenure?: number
-): { maxAmount: number; interestRate: number; tenureOptions: number[]; monthlyRepayment: number; approved: boolean; reasons: string[] } {
+): LoanEligibility {
   const reasons: string[] = [];
   const tierConfig = TIER_CONFIG[result.tier];
   
@@ -519,6 +527,7 @@ export function calculateLoanEligibility(
   }
   
   return {
+    product,
     maxAmount,
     interestRate,
     tenureOptions,

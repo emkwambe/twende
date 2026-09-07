@@ -11,7 +11,7 @@ interface WhatIfSimulatorProps {
 
 export default function WhatIfSimulator({ factors, currentResult }: WhatIfSimulatorProps) {
   const [selectedScenario, setSelectedScenario] = useState<number | null>(null);
-  const [customSavings, setCustomSavings] = useState(5000);
+  const [customConsistency, setCustomConsistency] = useState(10);
   const [customRepayment, setCustomRepayment] = useState(10);
 
   const simulation = selectedScenario !== null
@@ -24,7 +24,10 @@ export default function WhatIfSimulator({ factors, currentResult }: WhatIfSimula
   const runCustomSimulation = () => {
     const modified: TrustScoreFactors = {
       ...factors,
-      chama: { ...factors.chama, savingsVolume: Math.min(100, factors.chama.savingsVolume + customSavings / 500) },
+      chama: {
+        ...factors.chama,
+        contributionConsistency: Math.min(100, factors.chama.contributionConsistency + customConsistency),
+      },
       loans: { ...factors.loans, repaymentRate: Math.min(100, factors.loans.repaymentRate + customRepayment) },
     };
     const projected = calculateTrustScore(modified);
@@ -72,16 +75,16 @@ export default function WhatIfSimulator({ factors, currentResult }: WhatIfSimula
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-text3">Extra monthly chama savings</span>
-              <span className="font-medium text-text">KES {customSavings.toLocaleString()}</span>
+              <span className="text-text3">Improve chama contribution consistency</span>
+              <span className="font-medium text-text">+{customConsistency}%</span>
             </div>
             <input
               type="range"
               min="0"
-              max="20000"
-              step="500"
-              value={customSavings}
-              onChange={(e) => setCustomSavings(Number(e.target.value))}
+              max="30"
+              step="5"
+              value={customConsistency}
+              onChange={(e) => setCustomConsistency(Number(e.target.value))}
               className="w-full accent-ocean"
             />
           </div>
@@ -134,7 +137,7 @@ export default function WhatIfSimulator({ factors, currentResult }: WhatIfSimula
           <p className="text-xs text-text3 mt-0.5">
             {selectedScenario !== null
               ? SIMULATOR_SCENARIOS[selectedScenario].description
-              : `With KES ${customSavings.toLocaleString()} extra savings + ${customRepayment}% better repayment`}
+              : `With ${customConsistency}% better chama consistency + ${customRepayment}% better repayment`}
           </p>
         </div>
       </div>

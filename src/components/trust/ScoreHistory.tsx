@@ -17,7 +17,7 @@ export default function ScoreHistory({ history, currentScore }: ScoreHistoryProp
     4: 'Platinum (750-850)',
   };
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: ScoreHistoryPoint }>; label?: string }) => {
     if (active && payload && payload.length) {
       const score = payload[0].value;
       const tier = payload[0].payload.tier;

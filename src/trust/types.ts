@@ -3,11 +3,14 @@
 
 export interface TrustScoreFactors {
   // 1. Chama Savings Behavior (20% weight)
+  // Calibrated on behaviour, not wealth: no absolute contribution amount
+  // appears here. See docs/CHAMA_CREDIT_CALIBRATION_ANALYSIS.md §6.
   chama: {
-    contributionConsistency: number;   // 0-100, monthly on-time %
-    savingsVolume: number;             // normalized KES amount (0-100)
-    groupTenure: number;               // months in chama (0-100)
-    leadershipRole: boolean;           // officer = bonus
+    contributionConsistency: number;             // 0-100, on-time contribution %
+    contributionRelativeToChamaMedian: number;   // 0-100, own contribution vs group median
+    groupTenureMonths: number;                   // months of continuous membership
+    leadershipRole: boolean;                     // officer = peer-validated trust
+    chamaMemberCount: number;                    // group size (social coordination signal)
   };
 
   // 2. M-Pesa Transaction History (15% weight)
@@ -71,7 +74,7 @@ export interface TrustScoreWeights {
 
 export interface TrustScoreResult {
   score: number;        // 300-850
-  tier: number;         // 1-4
+  tier: 1 | 2 | 3 | 4;
   tierName: string;     // Bronze, Silver, Gold, Platinum
   factors: {
     chama: number;
