@@ -7,9 +7,10 @@ formal registration at ward/district level.
 from decimal import Decimal
 from typing import List, Optional
 
+from country_packs import tanzania as tz
 from models import Group, Member
 
-JOINING_FEE_TZS = 5_000
+JOINING_FEE_TZS = tz.JOINING_FEE
 
 
 def _find_role(members: List[Member], role: str) -> Optional[Member]:

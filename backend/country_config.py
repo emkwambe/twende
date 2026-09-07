@@ -2,12 +2,13 @@
 from dataclasses import dataclass
 from typing import Literal
 
+from country_packs import tanzania as tz
+
 CountryCode = Literal["KE", "TZ"]
 
-# NIDA (Tanzania national ID): YYYY-MMDD-XXXXX-XXXXX-XX
-# e.g. 1984-0313-11101-00006-25
-NIDA_REGEX = r"^\d{4}-\d{4}-\d{5}-\d{5}-\d{2}$"
-NIDA_FORMAT_HINT = "1984-0313-11101-00006-25"
+# Re-exported from the Tanzania country pack (single source of truth).
+NIDA_REGEX = tz.NIDA_REGEX
+NIDA_FORMAT_HINT = tz.NIDA_FORMAT_HINT
 
 
 @dataclass(frozen=True)
@@ -40,14 +41,14 @@ COUNTRY_CONFIG: dict[CountryCode, CountryConfig] = {
     "TZ": CountryConfig(
         code="TZ",
         name="Tanzania",
-        currency="TZS",
-        currency_symbol="TSh",
-        phone_prefix="+255",
-        id_label="NIDA",
+        currency=tz.CURRENCY,
+        currency_symbol=tz.CURRENCY_SYMBOL,
+        phone_prefix=tz.PHONE_PREFIX,
+        id_label=tz.ID_LABEL,
         id_regex=NIDA_REGEX,
-        mobile_money_providers=["mpesa", "mixx", "airtel", "halopesa", "tpesa"],
-        group_type_default="vicoba",
-        group_types=["vicoba", "upatu", "sacco", "other"],
+        mobile_money_providers=tz.MOBILE_MONEY_PROVIDERS,
+        group_type_default=tz.GROUP_TYPE_DEFAULT,
+        group_types=tz.GROUP_TYPES,
     ),
 }
 
