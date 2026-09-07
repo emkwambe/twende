@@ -319,6 +319,27 @@ class TransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LoanEligibilityResponse(BaseModel):
+    """What a borrower qualifies for before they request a specific amount."""
+
+    member_id: UUID
+    group_id: UUID
+    group_name: str
+    credit_score: int
+    tier: int
+    tier_name: str
+    max_amount: Decimal
+    interest_rate: float
+    currency: str
+    savings_balance: Decimal
+    outstanding_balance: Decimal
+    available_headroom: Decimal
+    group_savings: Decimal
+    group_limit: Decimal
+    eligible: bool
+    reasons: list[str]
+
+
 class PassbookResponse(BaseModel):
     member_id: UUID
     member_name: str

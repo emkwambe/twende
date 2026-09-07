@@ -108,14 +108,14 @@ A loan that matures before harvest forces repayment from a borrower with no crop
 | Factor | Declared band | Formula |
 |---|---|---|
 | Mobile money flow | 30 | $\min(\sigma / 0.15,\; 1) \times 30$ |
-| Debt service | 25 | $\max\!\left(0,\; \frac{0.70 - \text{DSR}}{0.70 - 0.25} \times 25\right)$ |
+| Debt service | 25 | $\min\!\left(25,\; \max\!\left(0,\; \frac{0.70 - \text{DSR}}{0.70 - 0.25} \times 25\right)\right)$ |
 | Group guarantee | 20 | $\min(\gamma / 0.30,\; 1) \times 20 \times m$ |
 | Formalization | 15 | document points, as above |
-| Seasonality | 10 | $\max(0,\; 10 + \Delta)$ |
+| Seasonality | 10 | $\min(10,\; \max(0,\; 10 + \Delta))$ |
 
 where $m$ is the group-type guarantee multiplier: **0.8 for Upatu**, 1.0 otherwise. Upatu rotates a fixed pot without interest accumulation, so its collective savings are a weaker guarantee than an interest-bearing VICOBA's.
 
-The debt-service band awards full marks at the target DSR of 0.25 and decays linearly to zero at the hard ceiling of 0.70.
+The debt-service band awards full marks at or below the target DSR of 0.25 and decays linearly to zero at the hard ceiling of 0.70. Both the debt-service and seasonality terms are capped at their bands, so the maximum attainable total is exactly 100 — see §6.
 
 ### Decision
 
@@ -125,44 +125,24 @@ $$\text{decision} = \begin{cases} \texttt{rejected} & \text{any critical failure
 
 ---
 
-## 6. Known Calibration Defect: Score Inflation
+## 6. Score Inflation: Identified and Fixed
 
-**Two bands are not capped at their declared maxima, so the total can exceed 100.**
+**Resolved.** The debt-service and seasonality terms were originally floored but not capped, so both could pay above their declared bands and the maximum attainable score was **118.89, not 100**. Because the approval threshold of 70 was set against a nominal 0-100 scale, this made approvals looser than intended - and the effect was largest for low-DSR applicants, who are often low-DSR only because their *estimated* income sits at the TZS 50,000 floor rather than because their cash flow is genuinely strong.
 
-The `SCORE_WEIGHTS` table declares bands summing to exactly 100, and the module comment states "total 100". Neither the debt-service nor the seasonality term enforces its ceiling:
+Both terms are now capped at their declared bands (Option 1 of the two resolutions previously set out here):
 
-**Debt service** is floored at 0 but not capped at 25. For DSR below the 0.25 target the numerator exceeds the denominator:
+| Case | Before | After | Band |
+|---|---|---|---|
+| Debt service @ DSR 0.00 | 38.89 | **25.00** | 25 |
+| Debt service @ DSR 0.10 | 33.33 | **25.00** | 25 |
+| Debt service @ DSR 0.25 (target) | 25.00 | 25.00 | 25 |
+| Seasonality, agriculture >=12 weeks | 15.00 | **10.00** | 10 |
+| Seasonality, agriculture <12 weeks | 5.00 | 5.00 | 10 |
+| **Maximum attainable total** | **118.89** | **100.00** | 100 |
 
-| DSR | Points awarded | Declared band |
-|---|---|---|
-| 0.00 | **38.89** | 25 |
-| 0.10 | **33.33** | 25 |
-| 0.25 (target) | 25.00 | 25 |
-| 0.45 | 13.89 | 25 |
-| 0.70 (ceiling) | 0.00 | 25 |
+The debt-service term now reaches its band at or below the target DSR of 0.25 and decays linearly to zero at the ceiling of 0.70. The seasonality bonus for a well-timed agricultural term now *restores* the full band rather than exceeding it, while the short-term penalty is unchanged - so agriculture is still penalised for maturing before harvest, and no case pays above 10.
 
-**Seasonality** adds the bonus on top of the full band rather than within it:
-
-| Case | Points awarded | Declared band |
-|---|---|---|
-| Non-agricultural | 10 | 10 |
-| Agriculture, short term | 5 | 10 |
-| Agriculture, ≥12 weeks | **15** | 10 |
-
-**Maximum attainable score is therefore 118.89, not 100.**
-
-The practical consequence is that the approval threshold of 70 is **looser than intended**. A borrower with very low debt service can bank up to 13.89 unearned points, which alone can carry a marginal application from `flagged` into `approved`. The effect is largest for exactly the population where caution matters most — low-DSR applicants are often low-DSR because their *estimated* income sits at the TZS 50,000 floor rather than because their true cash flow is strong.
-
-**This has deliberately not been fixed in code.** Capping both bands would tighten approvals immediately, and the 70 threshold may have been chosen — implicitly or empirically — against the inflated scale. Two coherent resolutions exist, and choosing between them is a lending-policy decision:
-
-1. **Cap the bands** at 25 and 10 (`min(...)` on both), keeping thresholds at 70/50. Approvals tighten. This makes the code match the stated design.
-2. **Keep the behaviour** and restate the scale as 0–119, re-deriving thresholds proportionally (70/119 ≈ 59% → threshold ~83). This preserves current decisions while making the document honest.
-
-Option 1 is the recommendation: the over-reward is an artefact of an unbounded linear expression, not a designed incentive, and there is no lending rationale for paying a borrower more than the full band for having no debt.
-
-Until this is resolved, treat any reported score above 100 as an instance of this defect, and do not cite the "0–100" range in external material without the caveat.
-
----
+**Effect on decisions.** Approval thresholds remain 70 / 50. Since scores can only decrease relative to the previous behaviour, some applications that previously scored `approved` on inflated points will now land in `flagged` (manual review) rather than auto-approving. That is the intended correction: the engine no longer pays a borrower more than a full band for carrying no debt.
 
 ## 7. Integration Status and Gaps
 
@@ -185,7 +165,7 @@ Until this is resolved, treat any reported score above 100 as an instance of thi
 ```python
 {
   "decision": "approved" | "flagged" | "rejected",
-  "score": float,                    # see §6 re: range
+  "score": float,                    # 0-100
   "factors": {
       "personal_savings_ratio":   float,
       "debt_service_ratio":       float,

@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import {
-  Wallet, Building2, FileText, Calculator, Truck, Target
+  Wallet, Building2, FileText, Calculator, Truck, Target, BookOpen
 } from 'lucide-react';
 import { calculateTrustScore } from '../trust/algorithm';
-import { trustScoreFactors, activeLoans } from '../data/mockData';
+import { trustScoreFactors } from '../data/mockData';
 import BusinessDashboard from '../components/biashara/BusinessDashboard';
-import LoanApplicationFlow from '../components/biashara/LoanApplicationFlow';
-import RepaymentScheduleTable from '../components/biashara/RepaymentScheduleTable';
+import LiveLoanApplication from '../components/biashara/LiveLoanApplication';
+import LiveLoans from '../components/biashara/LiveLoans';
+import LivePassbook from '../components/biashara/LivePassbook';
 import LoanCalculator from '../components/biashara/LoanCalculator';
 import SupplierPaymentForm from '../components/biashara/SupplierPaymentForm';
 import SavingsGoalTracker from '../components/biashara/SavingsGoalTracker';
 
-type TabId = 'dashboard' | 'apply' | 'loans' | 'calculator' | 'suppliers' | 'goals';
+type TabId = 'dashboard' | 'apply' | 'loans' | 'passbook' | 'calculator' | 'suppliers' | 'goals';
 
 export default function Biashara() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -21,6 +22,7 @@ export default function Biashara() {
     { id: 'dashboard', label: 'Dashboard', icon: Building2 },
     { id: 'apply', label: 'Apply for Loan', icon: Wallet },
     { id: 'loans', label: 'My Loans', icon: FileText },
+    { id: 'passbook', label: 'Passbook', icon: BookOpen },
     { id: 'calculator', label: 'Calculator', icon: Calculator },
     { id: 'suppliers', label: 'Suppliers', icon: Truck },
     { id: 'goals', label: 'Savings Goals', icon: Target },
@@ -37,19 +39,11 @@ export default function Biashara() {
           />
         );
       case 'apply':
-        return <LoanApplicationFlow onComplete={() => setActiveTab('loans')} />;
+        return <LiveLoanApplication onComplete={() => setActiveTab('loans')} />;
       case 'loans':
-        return (
-          <div className="space-y-6">
-            {activeLoans.map((loan) => (
-              <RepaymentScheduleTable
-                key={loan.id}
-                schedule={loan.repaymentSchedule}
-                loanName={loan.productName}
-              />
-            ))}
-          </div>
-        );
+        return <LiveLoans />;
+      case 'passbook':
+        return <LivePassbook />;
       case 'calculator':
         return <LoanCalculator />;
       case 'suppliers':
@@ -81,7 +75,7 @@ export default function Biashara() {
           </div>
           <div className="text-right">
             <p className="text-sm text-white/80">Pre-qualified for</p>
-            <p className="text-xl font-bold">KES {trustResult.maxLoanAmount.toLocaleString()}</p>
+            <p className="text-xl font-bold">TZS {trustResult.maxLoanAmount.toLocaleString()}</p>
             <p className="text-xs text-white/70">at {trustResult.interestRate}% APR</p>
           </div>
         </div>

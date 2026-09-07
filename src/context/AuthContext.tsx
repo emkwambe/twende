@@ -25,11 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       setUser(stored);
     }
-    const current = await authService.fetchCurrentUser();
-    if (current) {
+    try {
+      const current = await authService.fetchCurrentUser();
       setUser(current);
-    } else {
-      setUser(null);
+    } catch {
+      // The server never answered. Keep the stored session so the app still
+      // renders offline in demo mode; an actual auth failure is handled by the
+      // API interceptor, which clears the session and redirects to login.
+      if (!stored) setUser(null);
     }
     setIsLoading(false);
   }, []);
@@ -74,9 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    const current = await authService.fetchCurrentUser();
-    if (current) {
-      setUser(current);
+    try {
+      const current = await authService.fetchCurrentUser();
+      if (current) setUser(current);
+    } catch {
+      // Offline refresh is a no-op; the existing session stands.
     }
   };
 

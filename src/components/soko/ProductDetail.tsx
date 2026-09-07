@@ -57,7 +57,7 @@ export default function ProductDetail() {
   };
 
   const handleWhatsAppShare = () => {
-    const text = `Check out ${product.name} from ${store?.name || 'TWENDE Soko'}! Only KES ${product.price.toLocaleString()}. Shop now: https://twende.app/soko/product/${product.id}`;
+    const text = `Check out ${product.name} from ${store?.name || 'TWENDE Soko'}! Only TZS ${product.price.toLocaleString()}. Shop now: https://twende.app/soko/product/${product.id}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -152,9 +152,9 @@ export default function ProductDetail() {
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-text">KES {finalPrice.toLocaleString()}</span>
+            <span className="text-3xl font-bold text-text">TZS {finalPrice.toLocaleString()}</span>
             {product.compareAtPrice && product.compareAtPrice > finalPrice && (
-              <span className="text-lg text-text3 line-through">KES {product.compareAtPrice.toLocaleString()}</span>
+              <span className="text-lg text-text3 line-through">TZS {product.compareAtPrice.toLocaleString()}</span>
             )}
             {discount > 0 && (
               <span className="bg-coral text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -201,7 +201,7 @@ export default function ProductDetail() {
                     {option.value}
                     {option.priceAdjustment !== 0 && (
                       <span className="ml-1 text-xs">
-                        {option.priceAdjustment > 0 ? '+' : ''}KES {option.priceAdjustment.toLocaleString()}
+                        {option.priceAdjustment > 0 ? '+' : ''}TZS {option.priceAdjustment.toLocaleString()}
                       </span>
                     )}
                   </button>

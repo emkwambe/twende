@@ -54,28 +54,28 @@ export default function EarningsDashboard() {
             <DollarSign className="w-4 h-4 text-kazi" />
             <span className="text-xs text-text3">Total</span>
           </div>
-          <p className="text-xl font-bold text-text">KES {earnings.total.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">TZS {earnings.total.toLocaleString()}</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-2">
             <PiggyBank className="w-4 h-4 text-sunrise" />
             <span className="text-xs text-text3">Platform Fee</span>
           </div>
-          <p className="text-xl font-bold text-text">KES {earnings.platformFees.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">TZS {earnings.platformFees.toLocaleString()}</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-linda" />
             <span className="text-xs text-text3">Insurance</span>
           </div>
-          <p className="text-xl font-bold text-text">KES {earnings.insurancePremiums.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">TZS {earnings.insurancePremiums.toLocaleString()}</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-fresh" />
             <span className="text-xs text-text3">Net Earnings</span>
           </div>
-          <p className="text-xl font-bold text-fresh">KES {earnings.netEarnings.toLocaleString()}</p>
+          <p className="text-xl font-bold text-fresh">TZS {earnings.netEarnings.toLocaleString()}</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ export default function EarningsDashboard() {
               <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
               <Tooltip
                 contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '12px' }}
-                formatter={(value) => [`KES ${Number(value).toLocaleString()}`, 'Earnings']}
+                formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, 'Earnings']}
               />
               <Bar dataKey="earnings" fill="#1ABC9C" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -101,23 +101,23 @@ export default function EarningsDashboard() {
       {/* Payment Breakdown Example */}
       <div className="bg-surface rounded-xl border border-border p-5">
         <h3 className="text-sm font-semibold text-text mb-3">Payment Breakdown Example</h3>
-        <p className="text-xs text-text3 mb-3">For a KES 10,000 gig (medium risk):</p>
+        <p className="text-xs text-text3 mb-3">For a TZS 10,000 gig (medium risk):</p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-text2">Gig Amount</span>
-            <span className="font-medium text-text">KES {paymentExample.gigAmount.toLocaleString()}</span>
+            <span className="font-medium text-text">TZS {paymentExample.gigAmount.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-sunrise">
             <span className="text-text2">Platform Fee (5%)</span>
-            <span className="font-medium">-KES {paymentExample.platformFee.toLocaleString()}</span>
+            <span className="font-medium">-TZS {paymentExample.platformFee.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-linda">
             <span className="text-text2">Insurance Premium</span>
-            <span className="font-medium">-KES {paymentExample.insurancePremium.toLocaleString()}</span>
+            <span className="font-medium">-TZS {paymentExample.insurancePremium.toLocaleString()}</span>
           </div>
           <div className="pt-2 border-t border-border flex justify-between text-base font-bold text-fresh">
             <span>Net Payment</span>
-            <span>KES {paymentExample.netPayment.toLocaleString()}</span>
+            <span>TZS {paymentExample.netPayment.toLocaleString()}</span>
           </div>
         </div>
       </div>

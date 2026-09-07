@@ -91,7 +91,7 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
       {step === 1 && (
         <div>
           <h2 className="text-lg font-semibold text-text mb-1">Select Loan Product</h2>
-          <p className="text-xs text-text3 mb-4">Your Trust Score: {trustResult.score} ({trustResult.tierName} Tier) · Max: KES {tierMax.toLocaleString()}</p>
+          <p className="text-xs text-text3 mb-4">Your Trust Score: {trustResult.score} ({trustResult.tierName} Tier) · Max: TZS {tierMax.toLocaleString()}</p>
           <div className="grid grid-cols-1 gap-3">
             {products.map((product) => {
               const isEligible = trustResult.score >= product.minScore && trustResult.tier >= product.minTier;
@@ -116,7 +116,7 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
                         <h3 className="text-sm font-semibold text-text">{product.name}</h3>
                         {!isEligible && <span className="text-[10px] text-coral">Score too low</span>}
                       </div>
-                      <p className="text-xs text-text3 mt-0.5">{(product.baseInterestRate * 100).toFixed(0)}% APR · Up to KES {maxForUser.toLocaleString()}</p>
+                      <p className="text-xs text-text3 mt-0.5">{(product.baseInterestRate * 100).toFixed(0)}% APR · Up to TZS {maxForUser.toLocaleString()}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {product.features.slice(0, 2).map((f) => (
                           <span key={f} className="text-[10px] px-2 py-0.5 bg-bg rounded-full text-text3">{f}</span>
@@ -139,7 +139,7 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-text3">Loan Amount</span>
-                <span className="font-bold text-sunrise">KES {amount.toLocaleString()}</span>
+                <span className="font-bold text-sunrise">TZS {amount.toLocaleString()}</span>
               </div>
               <input
                 type="range"
@@ -151,8 +151,8 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
                 className="w-full accent-sunrise"
               />
               <div className="flex justify-between text-xs text-text3 mt-1">
-                <span>KES {selectedProduct.minAmount.toLocaleString()}</span>
-                <span>KES {Math.min(selectedProduct.maxAmount, tierMax).toLocaleString()}</span>
+                <span>TZS {selectedProduct.minAmount.toLocaleString()}</span>
+                <span>TZS {Math.min(selectedProduct.maxAmount, tierMax).toLocaleString()}</span>
               </div>
             </div>
             <div>
@@ -194,15 +194,15 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-xs text-text3">{selectedProduct.repaymentFrequency === 'weekly' ? 'Weekly' : 'Monthly'} Payment</p>
-                  <p className="font-bold text-text">KES {Math.round(schedule.installments[0].installment).toLocaleString()}</p>
+                  <p className="font-bold text-text">TZS {Math.round(schedule.installments[0].installment).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text3">Total Interest</p>
-                  <p className="font-bold text-text">KES {Math.round(schedule.totalInterest).toLocaleString()}</p>
+                  <p className="font-bold text-text">TZS {Math.round(schedule.totalInterest).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text3">Total Repayment</p>
-                  <p className="font-bold text-text">KES {Math.round(schedule.totalRepayment).toLocaleString()}</p>
+                  <p className="font-bold text-text">TZS {Math.round(schedule.totalRepayment).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text3">APR</p>
@@ -210,11 +210,11 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
                 </div>
                 <div>
                   <p className="text-xs text-text3">Processing Fee</p>
-                  <p className="font-bold text-text">KES {Math.round(schedule.processingFee).toLocaleString()}</p>
+                  <p className="font-bold text-text">TZS {Math.round(schedule.processingFee).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text3">You Receive</p>
-                  <p className="font-bold text-fresh">KES {Math.round(schedule.disbursedAmount).toLocaleString()}</p>
+                  <p className="font-bold text-fresh">TZS {Math.round(schedule.disbursedAmount).toLocaleString()}</p>
                 </div>
               </div>
             )}
@@ -246,10 +246,10 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
                   <tr key={inst.week} className="border-t border-border">
                     <td className="p-2">{inst.week}</td>
                     <td className="p-2 text-text3">{inst.dueDate}</td>
-                    <td className="p-2 text-right font-medium">KES {Math.round(inst.installment).toLocaleString()}</td>
-                    <td className="p-2 text-right text-fresh">KES {Math.round(inst.principal).toLocaleString()}</td>
-                    <td className="p-2 text-right text-sunrise">KES {Math.round(inst.interest).toLocaleString()}</td>
-                    <td className="p-2 text-right">KES {Math.round(inst.balance).toLocaleString()}</td>
+                    <td className="p-2 text-right font-medium">TZS {Math.round(inst.installment).toLocaleString()}</td>
+                    <td className="p-2 text-right text-fresh">TZS {Math.round(inst.principal).toLocaleString()}</td>
+                    <td className="p-2 text-right text-sunrise">TZS {Math.round(inst.interest).toLocaleString()}</td>
+                    <td className="p-2 text-right">TZS {Math.round(inst.balance).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -267,10 +267,10 @@ export default function LoanApplicationFlow({ onComplete }: LoanApplicationFlowP
           <h2 className="text-lg font-semibold text-text mb-4">Confirm & Submit</h2>
           <div className="p-4 bg-bg rounded-lg space-y-2 text-sm mb-4">
             <div className="flex justify-between"><span className="text-text3">Product</span><span className="font-medium text-text">{selectedProduct?.name}</span></div>
-            <div className="flex justify-between"><span className="text-text3">Amount</span><span className="font-medium text-text">KES {amount.toLocaleString()}</span></div>
+            <div className="flex justify-between"><span className="text-text3">Amount</span><span className="font-medium text-text">TZS {amount.toLocaleString()}</span></div>
             <div className="flex justify-between"><span className="text-text3">Tenure</span><span className="font-medium text-text">{tenure} {selectedProduct?.repaymentFrequency === 'monthly' ? 'months' : 'weeks'}</span></div>
             <div className="flex justify-between"><span className="text-text3">APR</span><span className="font-medium text-sunrise">{schedule?.apr.toFixed(1)}%</span></div>
-            <div className="flex justify-between"><span className="text-text3">Total Repayment</span><span className="font-medium text-text">KES {Math.round(schedule?.totalRepayment || 0).toLocaleString()}</span></div>
+            <div className="flex justify-between"><span className="text-text3">Total Repayment</span><span className="font-medium text-text">TZS {Math.round(schedule?.totalRepayment || 0).toLocaleString()}</span></div>
           </div>
           <label className="flex items-start gap-2 mb-5">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 accent-sunrise" />

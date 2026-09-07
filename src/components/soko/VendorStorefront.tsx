@@ -128,7 +128,7 @@ export default function VendorStorefront() {
             <p className="text-xs text-text3">Followers</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-text">KES {(store.totalRevenue / 1000).toFixed(0)}K</p>
+            <p className="text-lg font-bold text-text">TZS {(store.totalRevenue / 1000).toFixed(0)}K</p>
             <p className="text-xs text-text3">Revenue</p>
           </div>
           <div className="text-center">
@@ -139,7 +139,7 @@ export default function VendorStorefront() {
         <div className="mt-4 pt-4 border-t border-border text-xs text-text3 space-y-1">
           <p className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {store.location.address}</p>
           <p className="flex items-center gap-1"><Phone className="w-3 h-3" /> Contact via in-app messaging</p>
-          <p>Free delivery on orders over KES {store.freeDeliveryThreshold.toLocaleString()}</p>
+          <p>Free delivery on orders over TZS {store.freeDeliveryThreshold.toLocaleString()}</p>
           <p>Return policy: {store.returnPolicy}</p>
         </div>
       </div>

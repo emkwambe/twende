@@ -140,10 +140,10 @@ export const DEFAULT_WEIGHTS: TrustScoreWeights = {
 
 // Tier configuration
 export const TIER_CONFIG = {
-  1: { min: 300, max: 499, name: 'Bronze', risk: 'High Risk', maxLoan: 5000, rate: 24 },
-  2: { min: 500, max: 649, name: 'Silver', risk: 'Medium Risk', maxLoan: 50000, rate: 18 },
-  3: { min: 650, max: 749, name: 'Gold', risk: 'Low Risk', maxLoan: 200000, rate: 14 },
-  4: { min: 750, max: 850, name: 'Platinum', risk: 'Very Low Risk', maxLoan: 500000, rate: 10 },
+  1: { min: 300, max: 499, name: 'Bronze', risk: 'High Risk', maxLoan: 200_000, rate: 24 },
+  2: { min: 500, max: 649, name: 'Silver', risk: 'Medium Risk', maxLoan: 1_000_000, rate: 18 },
+  3: { min: 650, max: 749, name: 'Gold', risk: 'Low Risk', maxLoan: 4_000_000, rate: 14 },
+  4: { min: 750, max: 850, name: 'Platinum', risk: 'Very Low Risk', maxLoan: 10_000_000, rate: 10 },
 } as const;
 
 // Feature flags for each scoring factor (enable/disable per factor)

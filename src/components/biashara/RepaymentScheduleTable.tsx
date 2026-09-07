@@ -78,10 +78,10 @@ export default function RepaymentScheduleTable({ schedule, loanName }: Repayment
               <tr key={inst.week} className="border-b border-border last:border-0 hover:bg-bg/50">
                 <td className="p-2 text-text">{inst.week}</td>
                 <td className="p-2 text-text3">{inst.dueDate}</td>
-                <td className="p-2 text-right font-medium text-text">KES {Math.round(inst.installment).toLocaleString()}</td>
-                <td className="p-2 text-right text-fresh">KES {Math.round(inst.principal).toLocaleString()}</td>
-                <td className="p-2 text-right text-sunrise">KES {Math.round(inst.interest).toLocaleString()}</td>
-                <td className="p-2 text-right text-text">KES {Math.round(inst.balance).toLocaleString()}</td>
+                <td className="p-2 text-right font-medium text-text">TZS {Math.round(inst.installment).toLocaleString()}</td>
+                <td className="p-2 text-right text-fresh">TZS {Math.round(inst.principal).toLocaleString()}</td>
+                <td className="p-2 text-right text-sunrise">TZS {Math.round(inst.interest).toLocaleString()}</td>
+                <td className="p-2 text-right text-text">TZS {Math.round(inst.balance).toLocaleString()}</td>
                 <td className="p-2 text-center">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${statusClass(inst.status || 'pending')}`}>
                     {statusIcon(inst.status || 'pending')}

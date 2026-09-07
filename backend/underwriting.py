@@ -83,13 +83,18 @@ class TanzanianUnderwritingEngine:
             * tz.SCORE_WEIGHTS["mobile_money_flow"]
         )
 
-        # DSR points: full at target ratio, zero at hard ceiling
-        dsr_points = max(
-            0.0,
-            (
-                (settings.HARD_DEBT_SERVICE_CEILING - dsr)
-                / (settings.HARD_DEBT_SERVICE_CEILING - settings.TARGET_DEBT_SERVICE_RATIO)
-            ) * tz.SCORE_WEIGHTS["debt_service"],
+        # DSR points: full at target ratio, zero at hard ceiling. Capped at the
+        # declared band — below the target the linear term exceeds 1.0, and
+        # carrying no debt must not pay more than the band is worth.
+        dsr_points = min(
+            float(tz.SCORE_WEIGHTS["debt_service"]),
+            max(
+                0.0,
+                (
+                    (settings.HARD_DEBT_SERVICE_CEILING - dsr)
+                    / (settings.HARD_DEBT_SERVICE_CEILING - settings.TARGET_DEBT_SERVICE_RATIO)
+                ) * tz.SCORE_WEIGHTS["debt_service"],
+            ),
         )
 
         guarantee_points = (
@@ -99,9 +104,12 @@ class TanzanianUnderwritingEngine:
 
         formalization_points = formalization
 
-        # Seasonality band: 0-10, with agriculture penalties/bonuses
-        seasonality_points = max(
-            0.0, float(tz.SCORE_WEIGHTS["seasonality"]) + seasonality
+        # Seasonality band: 0-10, with agriculture penalties/bonuses. Capped at
+        # the declared band: a well-timed agricultural term restores the full
+        # band rather than exceeding it.
+        seasonality_points = min(
+            float(tz.SCORE_WEIGHTS["seasonality"]),
+            max(0.0, float(tz.SCORE_WEIGHTS["seasonality"]) + seasonality),
         )
 
         # Upatu groups get less guarantee credit (no interest accumulation)

@@ -50,7 +50,7 @@ export default function SupplierPaymentForm() {
               <p className="text-xs text-text3">{s.category} · {s.phone}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-text">KES {s.totalPaid.toLocaleString()}</p>
+              <p className="text-sm font-medium text-text">TZS {s.totalPaid.toLocaleString()}</p>
               <p className="text-[10px] text-text3">Last: {s.lastPayment}</p>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function SupplierPaymentForm() {
                   <p className="text-xs text-text3">{payment.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-text">KES {payment.amount.toLocaleString()}</p>
+                  <p className="font-medium text-text">TZS {payment.amount.toLocaleString()}</p>
                   <p className="text-[10px] text-text3">{payment.date}</p>
                 </div>
               </div>
@@ -106,11 +106,11 @@ export default function SupplierPaymentForm() {
             {supplier && (
               <div className="p-2 bg-surface rounded-lg text-xs text-text3">
                 <p><Phone className="w-3 h-3 inline mr-1" />{supplier.phone}</p>
-                <p>Total paid: KES {supplier.totalPaid.toLocaleString()}</p>
+                <p>Total paid: TZS {supplier.totalPaid.toLocaleString()}</p>
               </div>
             )}
             <div>
-              <label className="text-xs text-text3 mb-1 block">Amount (KES)</label>
+              <label className="text-xs text-text3 mb-1 block">Amount (TZS)</label>
               <input
                 type="number"
                 value={amount}

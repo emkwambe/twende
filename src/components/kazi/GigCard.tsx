@@ -36,7 +36,7 @@ export default function GigCard({ gig, matchScore, onApply, onView, variant = 'd
         <div className="flex items-center gap-3 mt-2 text-[10px] text-text3">
           <span className="flex items-center gap-0.5">
             <DollarSign className="w-3 h-3" />
-            KES {gig.budgetAmount.toLocaleString()} {gig.budgetType === 'hourly' && '/hr'}
+            TZS {gig.budgetAmount.toLocaleString()} {gig.budgetType === 'hourly' && '/hr'}
           </span>
           <span className="flex items-center gap-0.5">
             <MapPin className="w-3 h-3" />
@@ -86,7 +86,7 @@ export default function GigCard({ gig, matchScore, onApply, onView, variant = 'd
         <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-text3">
           <span className="flex items-center gap-1">
             <DollarSign className="w-3.5 h-3.5 text-kazi" />
-            <span className="text-text font-medium">KES {gig.budgetAmount.toLocaleString()}</span>
+            <span className="text-text font-medium">TZS {gig.budgetAmount.toLocaleString()}</span>
             {gig.budgetType === 'hourly' && '/hr'}
           </span>
           <span className="flex items-center gap-1">

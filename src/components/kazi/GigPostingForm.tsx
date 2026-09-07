@@ -256,7 +256,7 @@ export default function GigPostingForm({ onSubmit, onCancel: _onCancel }: GigPos
           </div>
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
-              {budgetType === 'fixed' ? 'Total Budget (KES)' : 'Hourly Rate (KES)'}
+              {budgetType === 'fixed' ? 'Total Budget (TZS)' : 'Hourly Rate (TZS)'}
             </label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text3" />

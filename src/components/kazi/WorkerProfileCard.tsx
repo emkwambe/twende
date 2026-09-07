@@ -125,7 +125,7 @@ export default function WorkerProfileCard({ worker, onSelect, variant = 'default
         </div>
         <div className="mt-3 flex items-center justify-between text-xs">
           <span className="text-text2">
-            {worker.hourlyRate ? `KES ${worker.hourlyRate}/hr` : `KES ${worker.dailyRate}/day`}
+            {worker.hourlyRate ? `TZS ${worker.hourlyRate}/hr` : `TZS ${worker.dailyRate}/day`}
           </span>
           <span className="text-text3 flex items-center gap-0.5">
             <Clock className="w-3 h-3" /> {worker.responseRate}% response

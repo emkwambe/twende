@@ -300,13 +300,13 @@ function getUnlockedFeatures(tier: number): string[] {
   const base = ['Basic account', 'Chama contributions'];
   
   if (tier >= 2) {
-    base.push('Biashara loans up to KES 50K', 'Linda insurance', 'Soko selling');
+    base.push('Biashara loans up to TZS 50K', 'Linda insurance', 'Soko selling');
   }
   if (tier >= 3) {
-    base.push('Biashara loans up to KES 200K', 'Premium insurance', 'Overdraft facility', 'Kazi emergency loans');
+    base.push('Biashara loans up to TZS 200K', 'Premium insurance', 'Overdraft facility', 'Kazi emergency loans');
   }
   if (tier >= 4) {
-    base.push('Biashara loans up to KES 500K', 'Revolving credit', 'Business loans', 'Co-guarantee loans', 'Best interest rates');
+    base.push('Biashara loans up to TZS 500K', 'Revolving credit', 'Business loans', 'Co-guarantee loans', 'Best interest rates');
   }
   
   return base;
@@ -508,7 +508,7 @@ export function calculateLoanEligibility(
   
   if (requestedAmount && requestedAmount > maxAmount) {
     approved = false;
-    reasons.push(`Requested amount exceeds your tier maximum of KES ${maxAmount.toLocaleString()}`);
+    reasons.push(`Requested amount exceeds your tier maximum of TZS ${maxAmount.toLocaleString()}`);
   }
   
   if (result.factors.loans < 30) {
@@ -522,7 +522,7 @@ export function calculateLoanEligibility(
   }
   
   if (approved) {
-    reasons.push(`Pre-approved for up to KES ${maxAmount.toLocaleString()} at ${interestRate}% APR`);
+    reasons.push(`Pre-approved for up to TZS ${maxAmount.toLocaleString()} at ${interestRate}% APR`);
     reasons.push(`Your ${tierConfig.name} tier gives you access to ${tenure}-month repayment options`);
   }
   

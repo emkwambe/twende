@@ -47,16 +47,19 @@ export const authService = {
     return response.data;
   },
 
+  /**
+   * Returns null only when there is no token to use. A failed request throws,
+   * so the caller can tell "not signed in" from "server unreachable" — those
+   * need opposite handling, and collapsing them logs the user out whenever the
+   * backend is down. A genuine 401 is handled by the response interceptor,
+   * which refreshes or clears the session before this ever rejects.
+   */
   async fetchCurrentUser(): Promise<User | null> {
     const tokens = this.getTokens();
     if (!tokens?.access_token) return null;
-    try {
-      const response = await api.get<User>('/users/me');
-      localStorage.setItem(USER_KEY, JSON.stringify(response.data));
-      return response.data;
-    } catch {
-      return null;
-    }
+    const response = await api.get<User>('/users/me');
+    localStorage.setItem(USER_KEY, JSON.stringify(response.data));
+    return response.data;
   },
 
   getTokens(): AuthTokens | null {

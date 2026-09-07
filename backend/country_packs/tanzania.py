@@ -75,3 +75,26 @@ SCORE_FLAG = 50
 
 # ─── Loan servicing (Sprint 14) ─────────────────────────────────────────────
 DEFAULT_GRACE_WEEKS = 2  # weeks past schedule before a loan is defaulted
+
+# ─── Loan tiers (credit score -> borrowing terms, TZS) ──────────────────────
+# Shared contract with the frontend Trust Engine's TIER_CONFIG. The Trust Score
+# decides which tier a borrower qualifies for; the underwriting engine then
+# decides whether a specific request inside that tier is affordable.
+LOAN_TIERS = (
+    {"tier": 1, "name": "Bronze",   "min_score": 300, "max_score": 499,
+     "max_loan": 200_000,    "interest_rate": 24.0},
+    {"tier": 2, "name": "Silver",   "min_score": 500, "max_score": 649,
+     "max_loan": 1_000_000,  "interest_rate": 18.0},
+    {"tier": 3, "name": "Gold",     "min_score": 650, "max_score": 749,
+     "max_loan": 4_000_000,  "interest_rate": 14.0},
+    {"tier": 4, "name": "Platinum", "min_score": 750, "max_score": 850,
+     "max_loan": 10_000_000, "interest_rate": 10.0},
+)
+
+
+def tier_for_score(score: int) -> dict:
+    """Return the loan tier a credit score falls into (lowest tier as floor)."""
+    for band in reversed(LOAN_TIERS):
+        if score >= band["min_score"]:
+            return band
+    return LOAN_TIERS[0]

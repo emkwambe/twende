@@ -115,7 +115,7 @@ export default function StoreCard({ store, variant = 'default' }: StoreCardProps
           </div>
           <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[10px] text-text3">
             <span>{store.totalOrders} orders</span>
-            <span>Free delivery over KES {store.freeDeliveryThreshold.toLocaleString()}</span>
+            <span>Free delivery over TZS {store.freeDeliveryThreshold.toLocaleString()}</span>
           </div>
         </div>
       </div>

@@ -145,7 +145,7 @@ export default function ShoppingCart() {
                           <Plus className="w-3.5 h-3.5 text-text2" />
                         </button>
                       </div>
-                      <span className="text-sm font-bold text-text">KES {itemTotal.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-text">TZS {itemTotal.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -193,21 +193,21 @@ export default function ShoppingCart() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-text2">
                 <span>Subtotal</span>
-                <span>KES {subtotal.toLocaleString()}</span>
+                <span>TZS {subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-text2">
                 <span>Delivery</span>
-                <span>{deliveryFee === 0 ? 'FREE' : `KES ${deliveryFee.toLocaleString()}`}</span>
+                <span>{deliveryFee === 0 ? 'FREE' : `TZS ${deliveryFee.toLocaleString()}`}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-fresh">
                   <span>Discount</span>
-                  <span>-KES {discount.toLocaleString()}</span>
+                  <span>-TZS {discount.toLocaleString()}</span>
                 </div>
               )}
               <div className="pt-2 border-t border-border flex justify-between text-base font-bold text-text">
                 <span>Total</span>
-                <span>KES {total.toLocaleString()}</span>
+                <span>TZS {total.toLocaleString()}</span>
               </div>
             </div>
 

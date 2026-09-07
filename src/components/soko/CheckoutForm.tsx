@@ -64,7 +64,7 @@ export default function CheckoutForm() {
           <p className="text-sm text-text3 mb-1">Order Number</p>
           <p className="text-lg font-bold text-text">#TWENDE-7829</p>
           <p className="text-sm text-text3 mt-3 mb-1">Total Paid</p>
-          <p className="text-lg font-bold text-text">KES {total.toLocaleString()}</p>
+          <p className="text-lg font-bold text-text">TZS {total.toLocaleString()}</p>
           <p className="text-xs text-text3 mt-3">A confirmation SMS has been sent to {currentUser.phone}</p>
         </div>
         <div className="flex gap-3 mt-6">
@@ -187,7 +187,7 @@ export default function CheckoutForm() {
                       <p className="text-xs text-text3">{method.desc}</p>
                     </div>
                     <span className="text-sm font-medium text-text">
-                      {method.price === 0 ? 'FREE' : `KES ${method.price}`}
+                      {method.price === 0 ? 'FREE' : `TZS ${method.price}`}
                     </span>
                   </button>
                 ))}
@@ -254,7 +254,7 @@ export default function CheckoutForm() {
                   onClick={handlePayment}
                   className="flex-1 py-2.5 bg-soko text-white rounded-lg text-sm font-medium hover:bg-soko/80 transition-colors"
                 >
-                  Pay KES {total.toLocaleString()}
+                  Pay TZS {total.toLocaleString()}
                 </button>
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function CheckoutForm() {
                     <p className="text-[10px] text-text3">{store?.name} · Qty: {item.quantity}</p>
                   </div>
                   <span className="text-xs font-medium text-text">
-                    KES {(product.price * item.quantity).toLocaleString()}
+                    TZS {(product.price * item.quantity).toLocaleString()}
                   </span>
                 </div>
               );
@@ -299,15 +299,15 @@ export default function CheckoutForm() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-text2">
               <span>Subtotal</span>
-              <span>KES {subtotal.toLocaleString()}</span>
+              <span>TZS {subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-text2">
               <span>Delivery</span>
-              <span>{deliveryFee === 0 ? 'FREE' : `KES ${deliveryFee.toLocaleString()}`}</span>
+              <span>{deliveryFee === 0 ? 'FREE' : `TZS ${deliveryFee.toLocaleString()}`}</span>
             </div>
             <div className="pt-2 border-t border-border flex justify-between text-base font-bold text-text">
               <span>Total</span>
-              <span>KES {total.toLocaleString()}</span>
+              <span>TZS {total.toLocaleString()}</span>
             </div>
           </div>
         </div>

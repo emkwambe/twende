@@ -1,6 +1,7 @@
 """Twende FastAPI backend — auth, users, and group underwriting."""
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Optional
 from uuid import UUID
@@ -15,6 +16,7 @@ from database import get_db
 from dependencies import get_current_user
 import ledger
 from constitution import generate_constitution
+from country_packs import tanzania as tz
 from models import (
     Constitution,
     Group,
@@ -35,6 +37,7 @@ from schemas import (
     AuthResponse,
     ConstitutionResponse,
     LedgerResponse,
+    LoanEligibilityResponse,
     GroupCreate,
     GroupResponse,
     KYCSubmitRequest,
@@ -348,6 +351,255 @@ def list_loans(
 ):
     loans = db.query(LoanApplication).all()
     return [_loan_response(loan) for loan in loans]
+
+
+def _primary_membership(db: Session, user: User) -> Optional[Member]:
+    """The membership a borrower acts through. Users belong to one group today;
+    if that changes, the most recently created membership wins."""
+    return (
+        db.query(Member)
+        .filter(Member.user_id == user.id)
+        .order_by(Member.created_at.desc())
+        .first()
+    )
+
+
+def _aware(dt: Optional[datetime]) -> Optional[datetime]:
+    """SQLite hands back naive datetimes; normalise to UTC before arithmetic."""
+    if dt is None:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+@app.get("/api/v1/users/me/trust-factors")
+def get_my_trust_factors(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The Trust Engine's 7-factor input vector, built from recorded data.
+
+    Only chama, loans and KYC have a backing data source today; Soko, Kazi,
+    Linda and M-Pesa have no server-side records yet. Those are returned as
+    nulls and named in `live_factors` so the client can be explicit about
+    which parts of a displayed score are real rather than silently scoring
+    an absent pillar as zero.
+
+    Chama figures follow the behaviour-normalized calibration: contribution
+    enters only relative to the group, never as an absolute amount.
+    See docs/CHAMA_CREDIT_CALIBRATION_ANALYSIS.md.
+    """
+    member = _primary_membership(db, current_user)
+    group = (
+        db.query(Group).filter(Group.id == member.group_id).first() if member else None
+    )
+
+    chama = None
+    if member and group:
+        member_count = int(group.member_count or 1)
+        avg_savings = float(group.total_savings or 0) / max(member_count, 1)
+        savings = float(member.savings_balance or 0)
+        # Contribution relative to the group's own level — capped at 100 so
+        # saving above the group average confers no extra wealth advantage.
+        relative = min((savings / avg_savings) * 100, 100.0) if avg_savings > 0 else 0.0
+
+        contributions = (
+            db.query(Transaction)
+            .filter(
+                Transaction.member_id == member.id,
+                Transaction.transaction_type == ledger.SHARE_PURCHASE,
+            )
+            .count()
+        )
+        created = _aware(member.created_at)
+        weeks_enrolled = 0
+        if created:
+            weeks_enrolled = max(
+                1, int((datetime.now(timezone.utc) - created).days / 7)
+            )
+        per_week = {"weekly": 1.0, "biweekly": 0.5, "monthly": 0.25}.get(
+            (group.meeting_frequency or "weekly").lower(), 1.0
+        )
+        expected = max(1.0, weeks_enrolled * per_week)
+        consistency = min((contributions / expected) * 100, 100.0)
+
+        tenure_months = 0.0
+        if created:
+            tenure_months = (datetime.now(timezone.utc) - created).days / 30.44
+
+        chama = {
+            "contributionConsistency": round(consistency, 2),
+            "contributionRelativeToChamaMedian": round(relative, 2),
+            "groupTenureMonths": round(tenure_months, 2),
+            "leadershipRole": str(member.role or "").lower()
+            in ("chair", "treasurer", "secretary"),
+            "chamaMemberCount": member_count,
+        }
+
+    loans_factor = None
+    if member:
+        loans = (
+            db.query(LoanApplication)
+            .filter(LoanApplication.member_id == member.id)
+            .all()
+        )
+        if loans:
+            repayments = (
+                db.query(Transaction)
+                .filter(
+                    Transaction.member_id == member.id,
+                    Transaction.transaction_type == ledger.LOAN_REPAYMENT,
+                )
+                .all()
+            )
+            by_loan = {l.id: l for l in loans}
+            on_time = sum(
+                1
+                for t in repayments
+                if t.loan_id in by_loan and ledger.is_on_time(by_loan[t.loan_id], t)
+            )
+            repayment_rate = (on_time / len(repayments) * 100) if repayments else 0.0
+
+            active = [
+                l for l in loans if l.status == "approved" and (l.loan_balance or 0) > 0
+            ]
+            outstanding = float(member.loan_balance or 0)
+            band = tz.tier_for_score(int(member.credit_score or 300))
+            utilization = min(outstanding / float(band["max_loan"]) * 100, 100.0)
+
+            loans_factor = {
+                "repaymentRate": round(repayment_rate, 2),
+                "activeLoans": len(active),
+                "defaultHistory": any(l.status == "defaulted" for l in loans),
+                "creditUtilization": round(utilization, 2),
+            }
+
+    kyc = {
+        "tier": int(current_user.kyc_tier or 1),
+        "idVerified": bool(current_user.national_id),
+        "addressVerified": False,
+        "biometricEnrolled": False,
+    }
+
+    live = ["kyc"]
+    if chama:
+        live.insert(0, "chama")
+    if loans_factor:
+        live.append("loans")
+
+    return {
+        "factors": {
+            "chama": chama,
+            "mpesa": None,
+            "soko": None,
+            "loans": loans_factor,
+            "kazi": None,
+            "linda": None,
+            "kyc": kyc,
+        },
+        "live_factors": live,
+        "credit_score": int(
+            (member.credit_score if member else None) or current_user.credit_score or 300
+        ),
+    }
+
+
+@app.get("/api/v1/loans/my", response_model=List[LoanApplicationResponse])
+def list_my_loans(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Every loan across the caller's own memberships, newest first."""
+    member_ids = [
+        m.id for m in db.query(Member).filter(Member.user_id == current_user.id).all()
+    ]
+    if not member_ids:
+        return []
+    loans = (
+        db.query(LoanApplication)
+        .filter(LoanApplication.member_id.in_(member_ids))
+        .order_by(LoanApplication.created_at.desc())
+        .all()
+    )
+    return [_loan_response(loan) for loan in loans]
+
+
+@app.get("/api/v1/loans/eligibility", response_model=LoanEligibilityResponse)
+def get_loan_eligibility(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Borrowing terms the caller qualifies for, before requesting an amount.
+
+    The tier comes from the credit score; the ceiling is the lower of the tier
+    limit and the VICOBA 4x group-savings rule, minus anything already owed.
+    Affordability of a specific request is decided at /loans/apply.
+    """
+    member = _primary_membership(db, current_user)
+    if not member:
+        raise HTTPException(
+            status_code=404,
+            detail="No group membership found. Join a group before borrowing.",
+        )
+    group = db.query(Group).filter(Group.id == member.group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    score = int(member.credit_score or current_user.credit_score or 300)
+    band = tz.tier_for_score(score)
+
+    savings = member.savings_balance or Decimal("0.00")
+    outstanding = member.loan_balance or Decimal("0.00")
+    group_savings = group.total_savings or Decimal("0.00")
+
+    tier_limit = Decimal(str(band["max_loan"]))
+    group_limit = group_savings * Decimal(str(settings.MAX_LOAN_TO_SAVINGS_RATIO))
+    max_amount = min(tier_limit, group_limit)
+    headroom = max(Decimal("0.00"), max_amount - outstanding)
+
+    reasons: List[str] = []
+    if group_limit < tier_limit:
+        reasons.append(
+            f"Capped by the VICOBA rule: 4x group savings of {group_savings:,.0f} TZS"
+        )
+    if outstanding > 0:
+        reasons.append(f"{outstanding:,.0f} TZS already outstanding is deducted")
+    if not member.national_id:
+        reasons.append("NIDA number required before any loan can be approved")
+
+    eligible = headroom > 0 and bool(member.national_id)
+    if eligible and not reasons:
+        reasons.append(f"{band['name']} tier: up to {max_amount:,.0f} TZS at {band['interest_rate']}% APR")
+
+    return LoanEligibilityResponse(
+        member_id=member.id,
+        group_id=group.id,
+        group_name=group.name,
+        credit_score=score,
+        tier=band["tier"],
+        tier_name=band["name"],
+        max_amount=money(max_amount),
+        interest_rate=float(band["interest_rate"]),
+        currency=tz.CURRENCY,
+        savings_balance=money(savings),
+        outstanding_balance=money(outstanding),
+        available_headroom=money(headroom),
+        group_savings=money(group_savings),
+        group_limit=money(group_limit),
+        eligible=eligible,
+        reasons=reasons,
+    )
+
+
+@app.get("/api/v1/members/me", response_model=MemberResponse)
+def get_my_membership(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The caller's own membership record — the handle the passbook needs."""
+    member = _primary_membership(db, current_user)
+    if not member:
+        raise HTTPException(status_code=404, detail="No group membership found")
+    return member
 
 
 @app.get("/api/v1/loans/{loan_id}", response_model=LoanApplicationResponse)

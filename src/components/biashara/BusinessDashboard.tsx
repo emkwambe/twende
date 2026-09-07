@@ -56,7 +56,7 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
               <DollarSign className="w-4 h-4 text-fresh" />
             </div>
           </div>
-          <p className="text-xl font-bold text-text">KES {totalRevenue.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">TZS {totalRevenue.toLocaleString()}</p>
           <div className="flex items-center gap-1 mt-1">
             <ArrowUpRight className="w-3 h-3 text-fresh" />
             <span className="text-xs text-fresh">+{(businessMetrics.revenueGrowth * 100).toFixed(1)}%</span>
@@ -69,7 +69,7 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
               <ShoppingBag className="w-4 h-4 text-coral" />
             </div>
           </div>
-          <p className="text-xl font-bold text-text">KES {totalExpenses.toLocaleString()}</p>
+          <p className="text-xl font-bold text-text">TZS {totalExpenses.toLocaleString()}</p>
           <div className="flex items-center gap-1 mt-1">
             <ArrowUpRight className="w-3 h-3 text-coral" />
             <span className="text-xs text-coral">+{(businessMetrics.expenseGrowth * 100).toFixed(1)}%</span>
@@ -136,7 +136,7 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
         <button onClick={onApplyLoan} className="p-4 bg-sunrise/10 rounded-xl text-left hover:bg-sunrise/20 transition-colors">
           <Wallet className="w-5 h-5 text-sunrise mb-2" />
           <p className="text-sm font-medium text-text">Apply Loan</p>
-          <p className="text-xs text-text3">Up to KES {trustResult.maxLoanAmount.toLocaleString()}</p>
+          <p className="text-xs text-text3">Up to TZS {trustResult.maxLoanAmount.toLocaleString()}</p>
         </button>
         <button onClick={onPaySupplier} className="p-4 bg-ocean/10 rounded-xl text-left hover:bg-ocean/20 transition-colors">
           <Truck className="w-5 h-5 text-ocean mb-2" />
@@ -164,7 +164,7 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <p className="text-sm font-medium text-text">{loan.productName}</p>
-                  <p className="text-xs text-text3">KES {loan.principal.toLocaleString()} · {loan.tenureWeeks} weeks</p>
+                  <p className="text-xs text-text3">TZS {loan.principal.toLocaleString()} · {loan.tenureWeeks} weeks</p>
                 </div>
                 <span className="px-2 py-0.5 bg-fresh/10 text-fresh text-xs rounded-full">{loan.status}</span>
               </div>
@@ -179,10 +179,10 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-xs text-text3">
-                  Balance: <span className="font-medium text-text">KES {loan.remainingBalance.toLocaleString()}</span>
+                  Balance: <span className="font-medium text-text">TZS {loan.remainingBalance.toLocaleString()}</span>
                 </div>
                 <div className="text-xs text-text3">
-                  Next: <span className="font-medium text-sunrise">KES {loan.nextDueAmount.toLocaleString()}</span> · {loan.nextDueDate}
+                  Next: <span className="font-medium text-sunrise">TZS {loan.nextDueAmount.toLocaleString()}</span> · {loan.nextDueDate}
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function BusinessDashboard({ onApplyLoan, onPaySupplier, onSetGoa
                   <div className="h-full bg-fresh rounded-full transition-all" style={{ width: `${progress}%` }} />
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-text3">KES {goal.currentAmount.toLocaleString()} of KES {goal.targetAmount.toLocaleString()}</span>
+                  <span className="text-text3">TZS {goal.currentAmount.toLocaleString()} of TZS {goal.targetAmount.toLocaleString()}</span>
                   <span className="text-text3">Auto-save: {goal.autoDeductPercentage}%</span>
                 </div>
               </div>

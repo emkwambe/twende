@@ -97,7 +97,7 @@ export default function EmployerDashboard() {
                       <h4 className="text-sm font-semibold text-text">{gig.title}</h4>
                       {getStatusBadge(gig.status)}
                     </div>
-                    <p className="text-xs text-text3 mt-1">{gig.location.ward} · KES {gig.budgetAmount.toLocaleString()}</p>
+                    <p className="text-xs text-text3 mt-1">{gig.location.ward} · TZS {gig.budgetAmount.toLocaleString()}</p>
                     <div className="flex items-center gap-3 mt-2 text-[10px] text-text3">
                       <span className="flex items-center gap-1">
                         <Eye className="w-3 h-3" /> {gig.viewCount} views

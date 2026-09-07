@@ -102,7 +102,7 @@ export default function TrustScoreCard({ result, size = 200, showDetails = true 
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-text3">Max Loan</span>
               <span className="text-sm font-bold text-text">
-                KES {result.maxLoanAmount.toLocaleString()}
+                TZS {result.maxLoanAmount.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">

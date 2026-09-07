@@ -21,7 +21,7 @@ export default function LoanCalculator() {
 
   const handleCopy = () => {
     if (!schedule) return;
-    const text = `TWENDE Loan Calculator\nAmount: KES ${amount.toLocaleString()}\nTenure: ${tenure} weeks\nAPR: ${schedule.apr.toFixed(1)}%\nTotal Interest: KES ${Math.round(schedule.totalInterest).toLocaleString()}\nTotal Repayment: KES ${Math.round(schedule.totalRepayment).toLocaleString()}`;
+    const text = `TWENDE Loan Calculator\nAmount: TZS ${amount.toLocaleString()}\nTenure: ${tenure} weeks\nAPR: ${schedule.apr.toFixed(1)}%\nTotal Interest: TZS ${Math.round(schedule.totalInterest).toLocaleString()}\nTotal Repayment: TZS ${Math.round(schedule.totalRepayment).toLocaleString()}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -54,7 +54,7 @@ export default function LoanCalculator() {
         <div>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-text3">Amount</span>
-            <span className="font-bold text-sunrise">KES {amount.toLocaleString()}</span>
+            <span className="font-bold text-sunrise">TZS {amount.toLocaleString()}</span>
           </div>
           <input
             type="range"
@@ -66,8 +66,8 @@ export default function LoanCalculator() {
             className="w-full accent-sunrise"
           />
           <div className="flex justify-between text-xs text-text3 mt-1">
-            <span>KES 1,000</span>
-            <span>KES 500,000</span>
+            <span>TZS 1,000</span>
+            <span>TZS 500,000</span>
           </div>
         </div>
         <div>
@@ -96,15 +96,15 @@ export default function LoanCalculator() {
           <div className="grid grid-cols-2 gap-3 text-sm mb-4">
             <div>
               <p className="text-xs text-text3">Weekly Payment</p>
-              <p className="font-bold text-text">KES {Math.round(schedule.installments[0].installment).toLocaleString()}</p>
+              <p className="font-bold text-text">TZS {Math.round(schedule.installments[0].installment).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-text3">Total Interest</p>
-              <p className="font-bold text-text">KES {Math.round(schedule.totalInterest).toLocaleString()}</p>
+              <p className="font-bold text-text">TZS {Math.round(schedule.totalInterest).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-text3">Total Repayment</p>
-              <p className="font-bold text-text">KES {Math.round(schedule.totalRepayment).toLocaleString()}</p>
+              <p className="font-bold text-text">TZS {Math.round(schedule.totalRepayment).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-text3">APR</p>
@@ -112,11 +112,11 @@ export default function LoanCalculator() {
             </div>
             <div>
               <p className="text-xs text-text3">Processing Fee</p>
-              <p className="font-bold text-text">KES {Math.round(schedule.processingFee).toLocaleString()}</p>
+              <p className="font-bold text-text">TZS {Math.round(schedule.processingFee).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-text3">You Receive</p>
-              <p className="font-bold text-fresh">KES {Math.round(schedule.disbursedAmount).toLocaleString()}</p>
+              <p className="font-bold text-fresh">TZS {Math.round(schedule.disbursedAmount).toLocaleString()}</p>
             </div>
           </div>
           <button

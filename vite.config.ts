@@ -30,7 +30,7 @@ export default defineConfig({
     // Avoids CORS entirely when Vite falls back to a port other than 5173.
     proxy: {
       '/api': {
-        target: process.env.VITE_BACKEND_ORIGIN || 'http://localhost:8002',
+        target: process.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000',
         changeOrigin: true,
       },
     },

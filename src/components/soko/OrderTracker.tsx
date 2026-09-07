@@ -87,7 +87,7 @@ export default function OrderTracker() {
                         <p className="text-xs text-text3">Qty: {item.quantity}</p>
                       </div>
                       <span className="text-sm font-medium text-text">
-                        KES {(item.price * item.quantity).toLocaleString()}
+                        TZS {(item.price * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -121,7 +121,7 @@ export default function OrderTracker() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-text3 pt-3 border-t border-border">
                   <div>
                     <p className="text-text2 font-medium mb-0.5">Total</p>
-                    <p className="font-bold text-text">KES {order.total.toLocaleString()}</p>
+                    <p className="font-bold text-text">TZS {order.total.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-text2 font-medium mb-0.5">Payment</p>

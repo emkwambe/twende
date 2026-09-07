@@ -52,11 +52,11 @@ export default function SavingsGoalTracker() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-text3">Total Saved</p>
-            <p className="text-xl font-bold text-fresh">KES {totalSaved.toLocaleString()}</p>
+            <p className="text-xl font-bold text-fresh">TZS {totalSaved.toLocaleString()}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-text3">Total Target</p>
-            <p className="text-xl font-bold text-text">KES {totalTarget.toLocaleString()}</p>
+            <p className="text-xl font-bold text-text">TZS {totalTarget.toLocaleString()}</p>
           </div>
         </div>
         <div className="mt-2 h-2 bg-border rounded-full overflow-hidden">
@@ -85,7 +85,7 @@ export default function SavingsGoalTracker() {
                 <div className="h-full bg-fresh rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-text3">KES {goal.currentAmount.toLocaleString()} of KES {goal.targetAmount.toLocaleString()}</span>
+                <span className="text-text3">TZS {goal.currentAmount.toLocaleString()} of TZS {goal.targetAmount.toLocaleString()}</span>
                 <span className="text-fresh font-medium">{progress.toFixed(0)}%</span>
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-text3">
@@ -113,7 +113,7 @@ export default function SavingsGoalTracker() {
               />
             </div>
             <div>
-              <label className="text-xs text-text3 mb-1 block">Target Amount (KES)</label>
+              <label className="text-xs text-text3 mb-1 block">Target Amount (TZS)</label>
               <input
                 type="number"
                 value={newGoalTarget}

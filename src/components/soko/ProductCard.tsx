@@ -84,9 +84,9 @@ export default function ProductCard({
               <p className="text-[10px] text-text3 mt-0.5 truncate">{storeName}</p>
             )}
             <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-sm font-bold text-text">KES {effectivePrice.toLocaleString()}</span>
+              <span className="text-sm font-bold text-text">TZS {effectivePrice.toLocaleString()}</span>
               {product.compareAtPrice && product.compareAtPrice > effectivePrice && (
-                <span className="text-[10px] text-text3 line-through">KES {product.compareAtPrice.toLocaleString()}</span>
+                <span className="text-[10px] text-text3 line-through">TZS {product.compareAtPrice.toLocaleString()}</span>
               )}
             </div>
           </div>
@@ -120,8 +120,8 @@ export default function ProductCard({
               {product.name}
             </h4>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-lg font-bold text-coral">KES {effectivePrice.toLocaleString()}</span>
-              <span className="text-xs text-text3 line-through">KES {product.price.toLocaleString()}</span>
+              <span className="text-lg font-bold text-coral">TZS {effectivePrice.toLocaleString()}</span>
+              <span className="text-xs text-text3 line-through">TZS {product.price.toLocaleString()}</span>
             </div>
             <button
               onClick={handleAddToCart}
@@ -187,9 +187,9 @@ export default function ProductCard({
             </div>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-base font-bold text-text">KES {effectivePrice.toLocaleString()}</span>
+            <span className="text-base font-bold text-text">TZS {effectivePrice.toLocaleString()}</span>
             {product.compareAtPrice && product.compareAtPrice > effectivePrice && (
-              <span className="text-xs text-text3 line-through">KES {product.compareAtPrice.toLocaleString()}</span>
+              <span className="text-xs text-text3 line-through">TZS {product.compareAtPrice.toLocaleString()}</span>
             )}
           </div>
           <div className="flex items-center justify-between mt-3">
@@ -206,7 +206,7 @@ export default function ProductCard({
                 e.preventDefault();
                 e.stopPropagation();
                 // Share via WhatsApp
-                const text = `Check out ${product.name} on TWENDE Soko! KES ${effectivePrice.toLocaleString()} — Shop now: https://twende.app/soko/product/${product.id}`;
+                const text = `Check out ${product.name} on TWENDE Soko! TZS ${effectivePrice.toLocaleString()} — Shop now: https://twende.app/soko/product/${product.id}`;
                 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
               }}
               className="ml-2 p-2 border border-border rounded-lg text-text3 hover:text-fresh hover:border-fresh transition-colors"

@@ -57,7 +57,7 @@ export default function WorkerProfileView({ worker }: WorkerProfileViewProps) {
             <p className="text-[10px] text-white/60">Gigs Done</p>
           </div>
           <div className="bg-white/10 rounded-lg p-3 text-center">
-            <p className="text-xl font-bold">KES {(worker.totalEarnings / 1000).toFixed(0)}K</p>
+            <p className="text-xl font-bold">TZS {(worker.totalEarnings / 1000).toFixed(0)}K</p>
             <p className="text-[10px] text-white/60">Earned</p>
           </div>
           <div className="bg-white/10 rounded-lg p-3 text-center">
@@ -125,13 +125,13 @@ export default function WorkerProfileView({ worker }: WorkerProfileViewProps) {
             {worker.hourlyRate && (
               <div className="flex justify-between text-sm">
                 <span className="text-text2">Hourly</span>
-                <span className="font-medium text-text">KES {worker.hourlyRate}</span>
+                <span className="font-medium text-text">TZS {worker.hourlyRate}</span>
               </div>
             )}
             {worker.dailyRate && (
               <div className="flex justify-between text-sm">
                 <span className="text-text2">Daily</span>
-                <span className="font-medium text-text">KES {worker.dailyRate}</span>
+                <span className="font-medium text-text">TZS {worker.dailyRate}</span>
               </div>
             )}
           </div>

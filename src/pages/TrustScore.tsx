@@ -1,4 +1,4 @@
-import { Shield, AlertTriangle, HelpCircle, FileText } from 'lucide-react';
+import { Shield, AlertTriangle, HelpCircle, FileText, Wifi } from 'lucide-react';
 import { useTrustScore } from '../trust/useTrustScore';
 import TrustScoreCard from '../components/trust/TrustScoreCard';
 import ScoreBreakdown from '../components/trust/ScoreBreakdown';
@@ -7,7 +7,8 @@ import WhatIfSimulator from '../components/trust/WhatIfSimulator';
 import ScoreEvents from '../components/trust/ScoreEvents';
 
 export default function TrustScore() {
-  const { result, factors, history, events, explanations, eligibility, loading, error } = useTrustScore();
+  const { result, factors, history, events, explanations, eligibility, loading, error, usingMock, liveFactors } =
+    useTrustScore();
 
   if (loading) {
     return (
@@ -35,6 +36,24 @@ export default function TrustScore() {
         </h1>
         <p className="text-text2 text-sm mt-1">Your alternative credit profile across all TWENDE products</p>
       </div>
+
+      {usingMock ? (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            <strong>Demo Mode:</strong> backend unavailable — this score is computed from
+            simulated data.
+          </span>
+        </div>
+      ) : (
+        <div className="bg-fresh/10 border border-fresh/30 text-fresh px-4 py-2 rounded-lg text-sm flex items-start gap-2">
+          <Wifi className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            <strong>Live data:</strong> {liveFactors.join(', ')} scored from your account.
+            Remaining pillars use demo values until those products record activity.
+          </span>
+        </div>
+      )}
 
       {/* Score card + Breakdown row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -86,7 +105,7 @@ export default function TrustScore() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-bg rounded-lg">
             <p className="text-xs text-text3 mb-1">Max Amount</p>
-            <p className="text-xl font-bold text-text">KES {eligibility.maxAmount.toLocaleString()}</p>
+            <p className="text-xl font-bold text-text">TZS {eligibility.maxAmount.toLocaleString()}</p>
           </div>
           <div className="p-4 bg-bg rounded-lg">
             <p className="text-xs text-text3 mb-1">Interest Rate</p>
@@ -98,7 +117,7 @@ export default function TrustScore() {
           </div>
           <div className="p-4 bg-bg rounded-lg">
             <p className="text-xs text-text3 mb-1">Monthly Payment</p>
-            <p className="text-xl font-bold text-text">KES {eligibility.monthlyRepayment.toLocaleString()}</p>
+            <p className="text-xl font-bold text-text">TZS {eligibility.monthlyRepayment.toLocaleString()}</p>
           </div>
         </div>
         <div className="mt-4">

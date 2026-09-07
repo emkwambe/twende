@@ -94,7 +94,7 @@ export default function ProductSearch({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-text truncate">{product.name}</p>
-                <p className="text-xs text-text3">KES {product.price.toLocaleString()} · {product.category}</p>
+                <p className="text-xs text-text3">TZS {product.price.toLocaleString()} · {product.category}</p>
               </div>
             </button>
           ))}

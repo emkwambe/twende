@@ -1,7 +1,11 @@
 // TWENDE Trust Engine — React Hook for Score Data
-// Computes trust score from mock factors and provides all derived data
+// Fetches the factor vector from the backend and computes the score from it.
+// Pillars the backend has no records for, and the whole vector when the API is
+// unreachable, fall back to demo values — reported via `usingMock`/`liveFactors`
+// so the UI can say which parts of a displayed score are real.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { userService } from '../services/userService';
 import type {
   TrustScoreFactors,
   TrustScoreResult,
@@ -33,10 +37,53 @@ export interface UseTrustScoreReturn {
   eligibility: LoanEligibility;
   loading: boolean;
   error: string | null;
+  /** True when no live factor could be fetched and everything shown is demo data. */
+  usingMock: boolean;
+  /** Which pillars came from the backend this render. */
+  liveFactors: (keyof TrustScoreFactors)[];
 }
 
 export function useTrustScore(): UseTrustScoreReturn {
-  const factors: TrustScoreFactors = trustScoreFactors;
+  const [factors, setFactors] = useState<TrustScoreFactors>(trustScoreFactors);
+  const [liveFactors, setLiveFactors] = useState<(keyof TrustScoreFactors)[]>([]);
+  const [usingMock, setUsingMock] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    userService
+      .getTrustFactors()
+      .then((res) => {
+        if (cancelled) return;
+        // Overlay the pillars the backend can vouch for onto the demo vector;
+        // a null pillar has no server-side records yet and keeps its demo value.
+        const merged = { ...trustScoreFactors } as TrustScoreFactors;
+        (Object.keys(res.factors) as (keyof TrustScoreFactors)[]).forEach((key) => {
+          const live = res.factors[key];
+          if (live) {
+            (merged[key] as TrustScoreFactors[typeof key]) =
+              live as TrustScoreFactors[typeof key];
+          }
+        });
+        setFactors(merged);
+        setLiveFactors(res.live_factors ?? []);
+        setUsingMock(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        console.warn('Trust factors unavailable — falling back to demo data');
+        setFactors(trustScoreFactors);
+        setLiveFactors([]);
+        setUsingMock(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const result = useMemo(() => {
     return calculateTrustScore(factors);
@@ -90,7 +137,9 @@ export function useTrustScore(): UseTrustScoreReturn {
     disputes,
     explanations,
     eligibility,
-    loading: false,
-    error: null,
+    loading,
+    error,
+    usingMock,
+    liveFactors,
   };
 }

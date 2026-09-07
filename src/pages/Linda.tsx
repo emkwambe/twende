@@ -29,7 +29,7 @@ export default function Linda() {
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold">
-              KES {(lindaPolicies.reduce((a, p) => a + p.coverage, 0)).toLocaleString()}
+              TZS {(lindaPolicies.reduce((a, p) => a + p.coverage, 0)).toLocaleString()}
             </p>
           </div>
         </div>
@@ -37,7 +37,7 @@ export default function Linda() {
           {lindaPolicies.map((p) => (
             <div key={p.id} className="bg-white/10 rounded-lg p-3">
               <p className="text-xs text-white/60">{p.type}</p>
-              <p className="text-lg font-bold">KES {p.coverage.toLocaleString()}</p>
+              <p className="text-lg font-bold">TZS {p.coverage.toLocaleString()}</p>
             </div>
           ))}
         </div>
@@ -73,12 +73,12 @@ export default function Linda() {
               <div className="grid grid-cols-3 gap-3 mb-3">
                 <div className="p-2 bg-bg rounded-lg text-center">
                   <p className="text-xs text-text3">Premium</p>
-                  <p className="text-sm font-semibold text-text">KES {policy.premium}</p>
+                  <p className="text-sm font-semibold text-text">TZS {policy.premium}</p>
                   <p className="text-[10px] text-text3">{policy.frequency}</p>
                 </div>
                 <div className="p-2 bg-bg rounded-lg text-center">
                   <p className="text-xs text-text3">Coverage</p>
-                  <p className="text-sm font-semibold text-text">KES {policy.coverage.toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-text">TZS {policy.coverage.toLocaleString()}</p>
                 </div>
                 <div className="p-2 bg-bg rounded-lg text-center">
                   <p className="text-xs text-text3">Claims</p>
@@ -113,7 +113,7 @@ export default function Linda() {
                 <p className="text-xs text-text3">{claim.policy} · Filed {claim.date}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-fresh">KES {claim.amount.toLocaleString()}</p>
+                <p className="text-sm font-semibold text-fresh">TZS {claim.amount.toLocaleString()}</p>
                 <p className="text-xs text-text3 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   Paid in 24hrs
@@ -167,7 +167,7 @@ export default function Linda() {
             <p className="text-xs text-text2 mt-1">
               Parametric crop cover for smallholder farmers. Automatic payout when satellite data confirms drought or flood.
             </p>
-            <p className="text-xs text-text3 mt-1">From KES 200/season · Coverage up to KES 50,000</p>
+            <p className="text-xs text-text3 mt-1">From TZS 200/season · Coverage up to TZS 50,000</p>
           </div>
           <ChevronRight className="w-4 h-4 text-text3" />
         </div>
