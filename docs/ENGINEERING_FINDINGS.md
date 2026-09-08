@@ -22,8 +22,8 @@ Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-d
 | 8 | NIDA placeholder was a near-neighbour of a real number | High — PII | **Fixed** `bd09706` |
 | 9 | `SHA-256(nida)` is functionally plaintext | High — PII | **Decided**, planned |
 | 10 | `national_id` hard reject excludes 35–43% of adults | High — inclusion | **Planned** Sprint 15 |
-| 11 | NIDA regex rejects the grouping printed on the card | Medium — onboarding | **Planned** Sprint 15 |
-| 12 | No public NIN check-digit algorithm exists | Medium — constrains design | **Decided** |
+| 11 | NIDA regex rejected the grouping printed on the card | Medium — onboarding | **Fixed** `280b5c3` |
+| 12 | No public NIN check-digit algorithm exists | Medium — constrains design | **Decided**, enforced by test `280b5c3` |
 | 13 | Formalization scoring is a wealth proxy | Medium — fairness | **Accepted with tripwire** |
 | 14 | Cross-border transfer is a per-transfer permit | High — architecture | **Open — blocking** |
 | 15 | PDPC registration overdue | High — legal | **Open — action** |
@@ -220,7 +220,7 @@ The real entropy of a national ID is bounded by the population holding one: **~2
 
 ---
 
-## 11. The regex rejects the number as printed on the card
+## 11. The regex rejected the number as printed on the card — **fixed**
 
 **Evidence.** `NIDA_REGEX` expects `4-4-5-5-2`; cards print `8-5-5-2`. Both are 20 digits.
 
@@ -231,7 +231,9 @@ as repo expects (4-4-5-5-2)    1990-0101-99999-00000-00   digits=20  repo_regex_
 
 A user copying their card verbatim is told their own ID is invalid.
 
-**Decision.** Accept all groupings, normalise to bare digits internally, display in `8-5-5-2`. Sprint 15 Phase 1.
+**Fixed** in `280b5c3`. All three groupings are accepted, input normalises to bare digits, and the canonical stored form is the card grouping — verified live: an ID in card grouping now registers successfully.
+
+`normalize_nid` also handles what real input actually contains: separators of every kind, Unicode format characters, and the zero-width and RTL marks that arrive with a WhatsApp paste. Confusables (`O`→0, `I`/`l`→1, `S`→5, `B`→8) are mapped **before** rejection rather than after — a user reading `O` off a card made a legible mistake, not an invalid claim. Every fix applied is recorded, because a spike in `O→0` is a UX signal and clean input arriving fast is a security signal.
 
 ---
 
@@ -242,6 +244,8 @@ A user copying their card verbatim is told their own ID is invalid.
 **Decision.** **Ship no checksum.** An invented mod-10/mod-11 would silently reject real citizens — invisible on our side, total on theirs. Offline validation caps at: 20 digits after normalisation, positions 1–8 a real past date implying age ≥ 18.
 
 **Related trap.** Searches conflate Tanzania's NIN with Uganda's (14 alphanumeric, `CM`/`CF` prefix). A spec citing 14 characters with letters is Uganda's.
+
+**Now enforced by test** (`280b5c3`): `test_no_checksum_is_implemented` mutates the trailing pair and asserts the number still validates. It exists to fail loudly if someone later adds a checksum — the failure mode being guarded against is invisible on our side and total for the person rejected.
 
 ---
 
