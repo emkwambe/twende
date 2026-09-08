@@ -160,6 +160,13 @@ class Member(Base):
     savings_balance = Column(Numeric(12, 2), default=Decimal("0.00"))
     loan_balance = Column(Numeric(12, 2), default=Decimal("0.00"))
     credit_score = Column(Integer, nullable=True)
+    # KYC standing is held on the membership, not only the user: the attestation
+    # route is granted by a specific group's committee and does not travel.
+    kyc_tier = Column(Integer, nullable=False, default=0)
+    kyc_method = Column(String(20), nullable=True)  # registry|document|attestation|agent
+    kyc_verified_at = Column(DateTime(timezone=True), nullable=True)
+    # A NIN can be suspended after issue, so verification is not permanent state.
+    kyc_reverify_after = Column(DateTime(timezone=True), nullable=True)
     role = Column(String(20), nullable=False, default="member")  # member, treasurer, chair
     status = Column(String, default="active")
     created_at = Column(DateTime(timezone=True), default=utc_now)
@@ -171,9 +178,66 @@ class Member(Base):
     transactions = relationship(
         "Transaction", back_populates="member", cascade="all, delete-orphan"
     )
+    attestations = relationship(
+        "IdentityAttestation", back_populates="member", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Member id={self.id} name={self.full_name}>"
+
+
+class IdentityAttestation(Base):
+    """A ward/village executive letter, corroborated by the group's committee.
+
+    The route exists because a NIDA-only flow would exclude 35-43% of Tanzanian
+    adults, concentrated in exactly the cohort the platform is for — and because
+    BoT Form F already accepts a WEO/VEO letter as photo ID. This table is the
+    evidence bundle behind that acceptance, not a bypass of it.
+
+    Two independent signals are required: an officer of the state (the letter)
+    and the group's own elected officers (the committee), each of whom must be
+    verified in their own right so the route cannot bootstrap from unverified
+    accounts.
+    """
+
+    __tablename__ = "identity_attestations"
+
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    member_id = Column(
+        Uuid(as_uuid=True), ForeignKey("members.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    group_id = Column(
+        Uuid(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # ── The letter ──────────────────────────────────────────────────────────
+    officer_name = Column(String(120), nullable=False)
+    officer_title = Column(String(60), nullable=False)   # WEO | VEO
+    office = Column(String(120), nullable=False)         # ward or village office
+    ward = Column(String(120), nullable=True)
+    village = Column(String(120), nullable=True)
+    letter_reference = Column(String(100), nullable=True)
+    letter_date = Column(DateTime(timezone=True), nullable=False)
+    document_url = Column(String(500), nullable=True)    # scan or photo of the letter
+
+    # ── The committee ───────────────────────────────────────────────────────
+    # Officer member ids, each verified in their own right. JSON rather than a
+    # join table: it is an immutable snapshot of who vouched and when, and must
+    # not silently change if a member later leaves the committee.
+    attesting_officers = Column(JSON, nullable=False, default=list)
+
+    status = Column(String(20), nullable=False, default="pending")  # pending|accepted|rejected
+    reviewed_by = Column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    rejection_reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    member = relationship("Member", back_populates="attestations")
+    group = relationship("Group")
+
+    def __repr__(self):
+        return f"<IdentityAttestation member={self.member_id} status={self.status}>"
 
 
 class LoanApplication(Base):

@@ -330,6 +330,56 @@ class TransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AttestationCreate(BaseModel):
+    """A ward/village executive letter plus the group officers corroborating it."""
+
+    member_id: UUID
+    officer_name: str = Field(..., max_length=120)
+    officer_title: str = Field(..., max_length=60)   # WEO or VEO
+    office: str = Field(..., max_length=120)
+    ward: Optional[str] = Field(None, max_length=120)
+    village: Optional[str] = Field(None, max_length=120)
+    letter_reference: Optional[str] = Field(None, max_length=100)
+    letter_date: datetime
+    document_url: Optional[str] = Field(None, max_length=500)
+    attesting_officer_ids: list[UUID] = Field(..., min_length=1)
+
+
+class AttestationResponse(BaseModel):
+    id: UUID
+    member_id: UUID
+    group_id: UUID
+    officer_name: str
+    officer_title: str
+    office: str
+    ward: Optional[str]
+    village: Optional[str]
+    letter_reference: Optional[str]
+    letter_date: Optional[Any]
+    status: str
+    rejection_reason: Optional[str]
+    attesting_officers: list[Any] = []
+    created_at: Optional[Any]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KYCStatusResponse(BaseModel):
+    """What the member has proved, what it unlocks, and what would close the gap."""
+
+    member_id: UUID
+    tier: int
+    tier_name: str
+    can_borrow: bool
+    method: Optional[str]
+    verified_at: Optional[Any]
+    reverify_after: Optional[Any]
+    expired: bool
+    limits: dict
+    next_steps: list[str]
+    accepted_documents: dict
+
+
 class LoanEligibilityResponse(BaseModel):
     """What a borrower qualifies for before they request a specific amount."""
 

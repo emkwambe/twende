@@ -17,11 +17,13 @@ from database import get_db
 from dependencies import get_current_user
 import ledger
 from constitution import generate_constitution
+from kyc import record_verification, resolve_tier, validate_attestation
 from observability import configure_observability
 from country_packs import get_pack, tanzania as tz
 from models import (
     Constitution,
     Group,
+    IdentityAttestation,
     LoanApplication,
     MeetingMinute,
     Member,
@@ -36,9 +38,12 @@ from rbac import (
     require_group_role,
 )
 from schemas import (
+    AttestationCreate,
+    AttestationResponse,
     AuthResponse,
     ConstitutionResponse,
     LedgerResponse,
+    KYCStatusResponse,
     LoanEligibilityResponse,
     GroupCreate,
     GroupResponse,
@@ -519,6 +524,123 @@ def get_my_trust_factors(
             (member.credit_score if member else None) or current_user.credit_score or 300
         ),
     }
+
+
+@app.get("/api/v1/members/me/kyc", response_model=KYCStatusResponse)
+def get_my_kyc_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The caller's verification standing and what would raise it.
+
+    Returns next steps rather than a bare tier, because a person who cannot
+    borrow needs to know which of the two routes is open to them.
+    """
+    member = _primary_membership(db, current_user)
+    if not member:
+        raise HTTPException(status_code=404, detail="No group membership found")
+
+    status = resolve_tier(member, db)
+    pack = get_pack(member.country or "TZ")
+    return KYCStatusResponse(
+        member_id=member.id,
+        tier=status.tier,
+        tier_name=status.name,
+        can_borrow=status.can_borrow,
+        method=status.method,
+        verified_at=status.verified_at,
+        reverify_after=status.reverify_after,
+        expired=status.expired,
+        limits=status.limits,
+        next_steps=status.next_steps,
+        accepted_documents=pack.ACCEPTED_ID_DOCUMENTS,
+    )
+
+
+@app.post("/api/v1/attestations", response_model=AttestationResponse)
+def submit_attestation(
+    payload: AttestationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Submit a WEO/VEO letter corroborated by the group's own officers.
+
+    This is the non-NIDA route to Tier 2. It is not a bypass: BoT Form F already
+    lists a ward/village executive letter among accepted photo ID, and both
+    signals — an officer of the state and the group's elected officers — must be
+    present. Officers must themselves be verified, so unverified accounts cannot
+    vouch each other into credit.
+    """
+    member = db.query(Member).filter(Member.id == payload.member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    _require_group_access(db, current_user, member.group_id, GroupRole.TREASURER)
+
+    officers = (
+        db.query(Member)
+        .filter(Member.id.in_(payload.attesting_officer_ids))
+        .all()
+    )
+    if len(officers) != len(set(payload.attesting_officer_ids)):
+        raise HTTPException(status_code=404, detail="One or more attesting officers not found")
+    if any(o.group_id != member.group_id for o in officers):
+        raise HTTPException(
+            status_code=400, detail="Attesting officers must belong to the member's group"
+        )
+
+    attestation = IdentityAttestation(
+        member_id=member.id,
+        group_id=member.group_id,
+        officer_name=payload.officer_name,
+        officer_title=payload.officer_title,
+        office=payload.office,
+        ward=payload.ward,
+        village=payload.village,
+        letter_reference=payload.letter_reference,
+        letter_date=payload.letter_date,
+        document_url=payload.document_url,
+        attesting_officers=[str(o.id) for o in officers],
+        status="pending",
+    )
+
+    errors = validate_attestation(attestation, officers, get_pack(member.country or "TZ"))
+    if errors:
+        raise HTTPException(status_code=400, detail="; ".join(errors))
+
+    # The evidence is complete and internally consistent, so it is accepted here.
+    # A human review queue belongs in front of this before real disbursement —
+    # see sprints/15-SPRINT_IDENTITY_KYC.md.
+    attestation.status = "accepted"
+    attestation.reviewed_by = current_user.id
+    attestation.reviewed_at = datetime.now(timezone.utc)
+    db.add(attestation)
+
+    record_verification(member, "attestation", get_pack(member.country or "TZ"))
+    db.commit()
+    db.refresh(attestation)
+    return attestation
+
+
+@app.get("/api/v1/members/{member_id}/attestations", response_model=List[AttestationResponse])
+def list_attestations(
+    member_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    member = db.query(Member).filter(Member.id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    is_own = member.user_id is not None and str(member.user_id) == str(current_user.id)
+    _require_group_access(
+        db, current_user, member.group_id, None if is_own else GroupRole.TREASURER
+    )
+    return (
+        db.query(IdentityAttestation)
+        .filter(IdentityAttestation.member_id == member_id)
+        .order_by(IdentityAttestation.created_at.desc())
+        .all()
+    )
 
 
 @app.get("/api/v1/loans/my", response_model=List[LoanApplicationResponse])

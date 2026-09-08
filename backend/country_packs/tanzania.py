@@ -111,3 +111,97 @@ def tier_for_score(score: int) -> dict:
         if score >= band["min_score"]:
             return band
     return LOAN_TIERS[0]
+
+
+# ─── KYC tiers (BoT Payment Systems (Electronic Money) Regulations 2015) ─────
+# Mirrors the gazetted Third Schedule, Form F ladder rather than inventing one:
+# aligning to a published schedule is a far better position in front of BoT than
+# arguing from first principles.
+#
+# The load-bearing entry is WEO_LETTER. Form F's accepted photo ID list reads
+# verbatim: "National ID; or Voter's registration card; or Employment ID; or
+# Social Security ID; or Letter from ward/village executive." A ward or village
+# executive officer letter is therefore a regulator-recognised identity document
+# in Tanzania — which makes a NIDA-only onboarding flow stricter than the law
+# requires, and stricter than the banks we compete with. See also NBC's Kikundi
+# group account rules and GN 678 Tier 4 registration, which both require one.
+
+# Documents that satisfy the Tier 1 identity requirement.
+ACCEPTED_ID_DOCUMENTS = {
+    "nida":            {"label": "NIDA (National ID)",        "photo_id": True},
+    "voter_card":      {"label": "Voter's registration card", "photo_id": True},
+    "employment_id":   {"label": "Employment ID",             "photo_id": True},
+    "social_security": {"label": "Social Security ID",        "photo_id": True},
+    "passport":        {"label": "Passport",                  "photo_id": True},
+    "weo_letter":      {"label": "Ward/Village Executive letter", "photo_id": False},
+}
+
+# How a member reached their tier. Recorded so approval and default rates can be
+# compared by route — the tripwire on formalization bias (see UNDERWRITING_ENGINE
+# and the Chama Credit Calibration Analysis).
+KYC_METHODS = ("registry", "document", "attestation", "agent")
+
+KYC_TIERS = (
+    {
+        "tier": 0,
+        "name": "Observer",
+        "requires": ("phone_verified",),
+        "unlocks": "Join a group, record contributions, view own passbook",
+        "max_single_txn": 0,
+        "max_daily": 0,
+        "max_balance": 0,
+        "can_borrow": False,
+    },
+    {
+        "tier": 1,
+        "name": "Member",
+        "requires": ("phone_verified", "any_accepted_id"),
+        "unlocks": "Contributions, withdrawals, group participation, Soko selling",
+        "max_single_txn": 1_000_000,
+        "max_daily": 1_000_000,
+        "max_balance": 2_000_000,
+        "can_borrow": False,
+    },
+    {
+        "tier": 2,
+        "name": "Verified",
+        # Two routes, deliberately. Either a verified NIDA, or a WEO/VEO letter
+        # backed by the group's own committee. Both reach credit.
+        "requires": ("phone_verified", "verified_nida_or_attestation"),
+        "unlocks": "Credit eligibility: loan application and disbursement",
+        "max_single_txn": 5_000_000,
+        "max_daily": 5_000_000,
+        "max_balance": 10_000_000,
+        "can_borrow": True,
+    },
+    {
+        "tier": 3,
+        "name": "Business",
+        "requires": ("tier_2", "tin", "business_licence"),
+        "unlocks": "Higher limits, supplier payments, agent participation",
+        "max_single_txn": 10_000_000,
+        "max_daily": 50_000_000,
+        "max_balance": 50_000_000,
+        "can_borrow": True,
+    },
+)
+
+MIN_TIER_TO_BORROW = 2
+
+# A NIN is not permanent state: NIDA suspends usage one month after an SMS notice
+# when a produced card is never collected (~1.2m uncollected as of Jan 2025). A
+# member can hold a valid NIN, be SIM-registered against it, and still have the
+# credential switched off. Re-verify rather than caching "has NIDA" forever.
+KYC_REVERIFY_DAYS = 365
+
+# A committee attestation needs this many group officers, each verified in their
+# own right, so the route cannot bootstrap itself from unverified accounts.
+ATTESTATION_MIN_OFFICERS = 2
+
+
+def tier_for(tier_number: int) -> dict:
+    """Return a tier definition, clamped to the ladder."""
+    for band in KYC_TIERS:
+        if band["tier"] == tier_number:
+            return band
+    return KYC_TIERS[0]

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from config import settings
 from country_packs import tanzania as tz
 from models import Group, LoanApplication, Member
+from kyc import can_borrow
 from money import CurrencyMismatch
 
 
@@ -35,8 +36,19 @@ class TanzanianUnderwritingEngine:
 
         # ── 1. Critical checks (auto-reject if any fail) ─────────────────────
         critical_failures: List[str] = []
-        if not member.national_id:
-            critical_failures.append("NIDA number required for loan application")
+        # Identity is required, but a NIDA is not the only way to establish it.
+        # BoT Form F accepts a ward/village executive letter as photo ID, and
+        # 35-43% of Tanzanian adults hold no usable NIDA credential — a NIDA-only
+        # gate would exclude them at enrolment, where no fairness audit can see
+        # it. What is checked is the verification tier, reachable by either the
+        # registry route or a committee-corroborated attestation. See kyc.py.
+        borrow_ok, tier_status = can_borrow(member)
+        if not borrow_ok:
+            critical_failures.append(
+                tier_status.next_steps[0]
+                if tier_status.next_steps
+                else "Identity verification required before borrowing"
+            )
         if amount > group_savings * settings.MAX_LOAN_TO_SAVINGS_RATIO:
             critical_failures.append("Loan exceeds 4x group savings (VICOBA rule)")
         if loan_balance > 0 and (loan_balance + amount) > savings * settings.MAX_DEBT_TO_SAVINGS_RATIO:

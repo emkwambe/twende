@@ -19,7 +19,9 @@ import ledger
 from auth_utils import get_password_hash
 from config import settings
 from database import SessionLocal
-from models import Group, LoanApplication, Member, User
+from models import Group, IdentityAttestation, LoanApplication, Member, User
+from country_packs import tanzania as tz
+from kyc import record_verification, validate_attestation
 from underwriting import TanzanianUnderwritingEngine
 
 PIN = settings.DEMO_PIN
@@ -53,7 +55,7 @@ PROFILES = [
         "tin_number": None,
         "brela_number": None,
         "savings_balance": Decimal("600_000"),
-        "member_role": "member",
+        "member_role": "treasurer",
         "loans": [],
     },
     {
@@ -63,11 +65,20 @@ PROFILES = [
         "role": "user",
         "credit_score": 420,
         "kyc_tier": 1,
-        "national_id": None,  # no NIDA -> triggers the critical-check rejection
+        "national_id": None,  # no NIDA -> must reach Tier 2 by attestation
         "tin_number": None,
         "brela_number": None,
         "savings_balance": Decimal("80_000"),
         "member_role": "member",
+        # Reaches Tier 2 through a ward executive letter corroborated by the
+        # group's officers -- the route that exists because 35-43% of Tanzanian
+        # adults hold no usable NIDA credential.
+        "attestation": {
+            "officer_name": "A. Mwangosi",
+            "officer_title": "WEO",
+            "office": "Kariakoo Ward Office",
+            "ward": "Kariakoo",
+        },
         "loans": [
             {"amount": Decimal("900_000"), "purpose": "agriculture", "weeks": 8, "repay_weeks": 0},
         ],
@@ -230,6 +241,42 @@ def seed_demo() -> None:
                 member.savings_balance = p["savings_balance"]
                 db.commit()
                 print("  member exists — refreshed savings")
+
+            # An attestation must exist before the loan runs, or underwriting
+            # correctly refuses a Tier 0 member.
+            spec_att = p.get("attestation")
+            if spec_att and not db.query(IdentityAttestation).filter(
+                IdentityAttestation.member_id == member.id
+            ).count():
+                officers = [
+                    o for o in db.query(Member).filter(
+                        Member.group_id == group.id,
+                        Member.role.in_(("chair", "treasurer", "secretary")),
+                        Member.id != member.id,
+                    ).all()
+                    if (o.kyc_tier or 0) >= 2
+                ]
+                att = IdentityAttestation(
+                    id=uuid4(),
+                    member_id=member.id,
+                    group_id=group.id,
+                    officer_name=spec_att["officer_name"],
+                    officer_title=spec_att["officer_title"],
+                    office=spec_att["office"],
+                    ward=spec_att.get("ward"),
+                    letter_date=datetime.now(timezone.utc),
+                    attesting_officers=[str(o.id) for o in officers],
+                    status="accepted",
+                    reviewed_at=datetime.now(timezone.utc),
+                )
+                errors = validate_attestation(att, officers, tz)
+                if errors:
+                    print(f"  attestation NOT seeded: {'; '.join(errors)}")
+                else:
+                    db.add(att)
+                    record_verification(member, "attestation", tz)
+                    db.commit()
+                    print(f"  attestation accepted -> Tier {member.kyc_tier} via {member.kyc_method}")
 
             # Top up to the spec rather than skipping wholesale, so a member
             # carrying loans from earlier testing still gains the demo set.

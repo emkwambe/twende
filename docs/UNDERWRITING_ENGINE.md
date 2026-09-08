@@ -54,13 +54,30 @@ Evaluated before scoring. Any failure forces `decision = "rejected"` regardless 
 
 | # | Condition | Rejection reason | Basis |
 |---|---|---|---|
-| 1 | `member.national_id` is absent | NIDA number required for loan application | KYC precondition for any credit extension |
+| 1 | Member is below **KYC Tier 2** (`kyc.can_borrow`) | The member's own next step — e.g. *"No NIDA? A letter from your ward or village executive officer, confirmed by two of your group's officers, works instead."* | KYC precondition for credit. **Reachable by two routes** — see below |
 | 2 | `amount > group_savings × 4.0` | Loan exceeds 4x group savings (VICOBA rule) | The classic VICOBA lending limit, widely understood by groups themselves |
 | 3 | `loan_balance > 0` **and** `(loan_balance + amount) > savings × 3.0` | Total debt exceeds 3x personal savings | Prevents debt stacking across successive loans |
 
 Constants: `MAX_LOAN_TO_SAVINGS_RATIO = 4.0`, `MAX_DEBT_TO_SAVINGS_RATIO = 3.0`.
 
 Check 3 applies only to members who already carry a balance; a first-time borrower is not gated on it.
+
+### Check 1 was a NIDA gate, and is not any more
+
+Until Sprint 15 Phase 2 this check read `if not member.national_id`. That single line was the platform's largest exclusion mechanism: **35-43% of Tanzanian adults hold no usable NIDA credential**, concentrated in rural women, under-25s and dependants — the same cohort the Chama Credit Calibration Analysis identified as the primary customer. Removing wealth bias from chama scoring while gating enrolment on a document that cohort cannot obtain simply moves the exclusion one layer earlier, into the funnel, **where no fairness audit can see it.**
+
+It now checks **verification tier**, which is reachable two ways:
+
+| Route | Evidence | Recorded as |
+|---|---|---|
+| **Registry** | A verified NIDA number | `kyc_method = "registry"` |
+| **Attestation** | A ward/village executive letter, corroborated by **two verified officers of the member's own group** | `kyc_method = "attestation"` |
+
+The second route is lawful rather than lenient: **BoT Form F lists a ward/village executive letter among accepted photo ID**, as do NBC's Kikundi account rules and GN 678. A NIDA-only flow is stricter than Tanzanian law requires. See `IDENTITY_REFEREE_POLICY.md`.
+
+**Verification expires.** NIDA suspends NIN usage a month after an SMS notice when a produced card is never collected (~1.2m uncollected as of January 2025), so a lapsed member drops below the borrowing threshold and is told why — including that collecting the card is usually the fix.
+
+**What the attestation route does *not* change:** the member still scores **zero on formalization** (up to 15 of 100 points, §5). Both routes reach the same door; they do not yet reach the same terms. That residual disparity is retained deliberately and monitored — see §5.1.
 
 ---
 
@@ -112,6 +129,16 @@ A loan that matures before harvest forces repayment from a borrower with no crop
 | Group guarantee | 20 | $\min(\gamma / 0.30,\; 1) \times 20 \times m$ |
 | Formalization | 15 | document points, as above |
 | Seasonality | 10 | $\min(10,\; \max(0,\; 10 + \Delta))$ |
+
+### 5.1 Formalization is a wealth proxy, and is monitored as one
+
+The formalization band awards NIDA 8, TIN 4 and BRELA 3. Document possession correlates with being urban, male, formally employed and wealthier — the same class of proxy the chama calibration removed from that factor.
+
+It is kept, because formalization genuinely correlates with recoverability and legal enforceability, and unlike the chama factor there is no obvious within-group normalisation. But it is kept **with a falsifiable tripwire** rather than an assurance:
+
+> Track approval rate and mean score **by `kyc_method`**. If the attestation cohort underperforms on *approval* without underperforming on *repayment*, the formalization weight is doing wealth-proxy work rather than credit work, and should be cut.
+
+`kyc_method` is recorded on every member precisely so this comparison can be run.
 
 where $m$ is the group-type guarantee multiplier: **0.8 for Upatu**, 1.0 otherwise. Upatu rotates a fixed pot without interest accumulation, so its collective savings are a weaker guarantee than an interest-bearing VICOBA's.
 
