@@ -13,7 +13,7 @@ PHONE_PREFIX = "+255"
 # NIDA (national ID): YYYY-MMDD-XXXXX-XXXXX-XX
 ID_LABEL = "NIDA"
 NIDA_REGEX = r"^\d{4}-\d{4}-\d{5}-\d{5}-\d{2}$"
-NIDA_FORMAT_HINT = "1984-0313-11101-00006-25"
+NIDA_FORMAT_HINT = "1990-0101-99999-00000-00"
 
 # ─── Money ──────────────────────────────────────────────────────────────────
 CURRENCY = "TZS"
