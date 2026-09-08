@@ -27,7 +27,7 @@ Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-d
 | 13 | Formalization scoring is a wealth proxy | Medium — fairness | **Accepted with tripwire** |
 | 14 | Cross-border transfer is a per-transfer permit | High — architecture | **Open — blocking** |
 | 15 | PDPC registration overdue | High — legal | **Open — action** |
-| 16 | Kenya country config now says `TZS` | Low — regression | **Open** |
+| 16 | Kenya country config said `TZS` | Low — regression | **Fixed** `76e70a4` |
 | 17 | Trust Engine calibration has no backend counterpart | Medium | **Open** |
 | 18 | No join-a-group flow | Medium — golden path gap | **Open** |
 
@@ -279,13 +279,20 @@ Cheapest item on the list, and it gates everything else.
 
 ---
 
-## 16. Kenya country config now says `TZS` — **open**
+## 16. Kenya country config said `TZS` — **fixed**
 
-**Evidence.** Commit `41bb6a4` normalized currency across all country configs and caught the Kenya entry: `KE: { currency: 'TZS', currencySymbol: 'TZS', … }`.
+**Evidence.** Commit `41bb6a4` normalized currency across all country configs and caught the Kenya entry: `KE: { currency: 'TZS', currencySymbol: 'TZS', … }`. A Kenyan user would have been shown Tanzanian shillings. The backend's `country_config.py` was untouched and still read `KES`/`KSh`, so the two sides of the stack disagreed for that market.
 
-Kenya's currency is KES/KSh. During the Golden Path sprint the KE entry was deliberately left untouched — 125 KES/KSh literals across 26 files were converted to TZS, but that entry is multi-country config, not a hardcoded pilot string. A Kenyan user would now see Tanzanian shillings.
+**Why the sweep was right everywhere else.** 125 KES/KSh literals across 26 files were correctly converted — those were hardcoded pilot strings. This entry is different in kind: it is multi-country configuration, and the whole point of the country-pack design is that each market carries its own values. TZ remains the pilot default through `getCountryConfig`'s fallback, which is what makes Tanzania-first behaviour correct *without* falsifying the Kenya config.
 
-**Open** pending a call on whether it was deliberate for the pilot demo. Two-value fix.
+**Fixed** in `76e70a4`. Frontend and backend now agree on both markets, verified by parsing both config files and comparing:
+
+```
+KE  frontend=KES/KSh   backend=KES/KSh   MATCH
+TZ  frontend=TZS/TSh   backend=TZS/TSh   MATCH
+```
+
+**Worth keeping as a guard.** That comparison is a two-minute script and would have caught this at the point it was introduced. A cross-stack config-agreement check is a reasonable thing to add to CI alongside `tsc`.
 
 ---
 
