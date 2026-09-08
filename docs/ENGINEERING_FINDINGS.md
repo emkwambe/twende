@@ -4,7 +4,7 @@
 
 This exists because most of what follows was discovered by measuring the code rather than reading it, and because several decisions here are ones a future reader would otherwise re-litigate or silently reverse. Each entry states the evidence, the decision, and its status. Where a figure appears, it was produced by running something — the command is given so it can be re-checked.
 
-Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-decision engine, `TRUST_ENGINE_WHITEPAPER.md` §4.3.1 for chama scoring, `CHAMA_CREDIT_CALIBRATION_ANALYSIS.md` for the fairness argument, `sprints/15-SPRINT_IDENTITY_KYC.md` for identity work.
+Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-decision engine, `TRUST_ENGINE_WHITEPAPER.md` §4.3.1 for chama scoring, `CHAMA_CREDIT_CALIBRATION_ANALYSIS.md` for the fairness argument, `sprints/15-SPRINT_IDENTITY_KYC.md` for identity work, `sprints/16-SPRINT_MULTI_COUNTRY.md` for territory expansion.
 
 ---
 
@@ -30,6 +30,8 @@ Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-d
 | 16 | Kenya country config said `TZS` | Low — regression | **Fixed** `76e70a4` |
 | 17 | Trust Engine calibration has no backend counterpart | Medium | **Open** |
 | 18 | No join-a-group flow | Medium — golden path gap | **Open** |
+| 19 | Country packs are not actually multi-country | High — blocks expansion | **Open** — Sprint 16 |
+| 20 | No currency denomination on any money column | High — silent corruption | **Open — do first** |
 
 ---
 
@@ -305,6 +307,57 @@ The recalibrated chama weights live only in `src/trust/algorithm.ts`. `/users/me
 ## 18. No join-a-group flow — **open**
 
 Surfaced by end-to-end testing: a freshly registered user has no group membership, so `/loans/eligibility` correctly 404s and they cannot borrow. Loans are guaranteed by chama savings, so the behaviour is right — but **register → apply does not complete for a new account**. The UI now explains this rather than mislabelling it as backend failure. There is no flow to join or form a group.
+
+---
+
+## 19. Country packs are not actually multi-country — **open**
+
+**Evidence.** Sprint 14 created `country_packs/` and `tanzania.py` is genuinely clean — pure data, no backend imports. But **nothing consumes the abstraction.** All six backend modules reach past the registry:
+
+```python
+# config.py, constitution.py, country_config.py, ledger.py, main.py, underwriting.py
+from country_packs import tanzania as tz
+```
+
+`get_pack()` is called by nothing. `PACKS` has one entry. And the resolver **fails open**:
+
+```python
+return PACKS.get(country_code.upper(), tanzania)   # get_pack("UG") → Tanzania, silently
+```
+
+| Module | `tz.*` refs | Consequence |
+|---|---|---|
+| `underwriting.py` | 15 | **Never reads `group.country`** — a Kenyan group would get the VICOBA 4× rule, a TZS income floor, and NIDA/TIN/BRELA formalization points |
+| `config.py` | 8 | TZ constants frozen into module-level singletons at import; one is named `MIN_WEEKLY_INCOME_TZS` |
+| `main.py` | 3 | `tz.tier_for_score()` — TZS tiers regardless of country |
+| `ledger.py` | 2 | TZ grace weeks and currency label for all markets |
+| `constitution.py` | 1 | `JOINING_FEE_TZS` |
+
+Kenya has *display* config (`country_config.py`, `country.ts`) but **no pack** — no underwriting guardrails, no formalization docs, no tiers, and `id_regex=None  # TODO`.
+
+**Why this is worse than not supporting a market.** Adding Uganda today produces a system that silently underwrites it as Tanzania — no error, no signal, plausible-looking output. Failing open is the defect.
+
+**Decision.** `get_pack()` must raise on an unsupported code; packs must resolve from the entity's country at runtime; a written contract must define what a pack owes. Sprint 16 §2–3.
+
+**Sequencing.** Sprint 16 follows Sprint 15 deliberately. Identity is irreducibly per-market — Tanzania NIDA (20 digits, no checksum), Kenya Huduma Namba (**≤8 digits, unpadded — a fixed-width mask rejects real holders**), Uganda NIN (14 alphanumeric, `CM`/`CF`), Rwanda NID (16 digits). Building the abstraction against zero real implementations is speculative generality; KYC on Tanzania produces the reference implementation that defines the contract, and Kenya is then the second one that proves it.
+
+And the code is not the long pole — **every market needs its own licence and data-protection registration**, which is sequential and slow (§ compliance calendar).
+
+---
+
+## 20. No currency denomination on any money column — **open, do first**
+
+**Evidence.** Thirteen money columns across five tables (`groups`, `members`, `loan_applications`, `mobile_money_statements`, `transactions`) are bare `Numeric(12, 2)`. **No currency is stored anywhere** — not on the row, not on the table, not in a constraint. The two `currency` fields in `schemas.py` are response-shaping only, computed from `tz.CURRENCY` at serialisation and never persisted.
+
+**Harmless today, corrupting on day one of a second market.** TZS 1,000,000 and KES 50,000 are roughly equal in value and twentyfold apart as numbers. Once both share a column:
+
+- group totals, portfolio aggregates and the ledger silently mis-sum;
+- the underwriting ratios (`savings / amount`, `group_savings / amount`, DSR) are dimensionless **only if numerator and denominator share a currency — nothing enforces that**;
+- the failure is silent and plausible. A wrong total looks like a total.
+
+**Decision.** Add currency to every money-bearing table, backfill `TZS`, enforce `NOT NULL`, and make an amount without a currency unconstructible in the application layer — the same "make the wrong thing unrepresentable" move as the redacting `NationalId` type.
+
+**This one should not wait for Sprint 15.** It is not a multi-country feature, it is a correctness bug, and it is cheap now and a data-repair exercise after the pilot writes a few thousand transactions. Alembic is already wired (5 migrations), so it is an ordinary migration.
 
 ---
 
