@@ -103,6 +103,9 @@ class Group(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     country = Column(String(2), nullable=False, default="TZ")  # KE, TZ
+    # Denominates every money column on this row. Derived from the country
+    # pack at creation; never inferred at read time.
+    currency = Column(String(3), nullable=False, default="TZS")
     group_type = Column(String, default="vicoba")  # vicoba, upatu, sacco, other
     location = Column(String, nullable=True)  # ward/village level
     region = Column(String, nullable=True)
@@ -143,6 +146,7 @@ class Member(Base):
     )
     group_id = Column(Uuid(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     country = Column(String(2), nullable=False, default="TZ")
+    currency = Column(String(3), nullable=False, default="TZS")
     full_name = Column(String, nullable=False)
     phone = Column(String, unique=True, nullable=False)
     phone_provider = Column(String, nullable=True)
@@ -180,6 +184,9 @@ class LoanApplication(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(Uuid(as_uuid=True), ForeignKey("members.id"), nullable=False)
     group_id = Column(Uuid(as_uuid=True), ForeignKey("groups.id"), nullable=False)
+    # Denominated on the row: a loan is a durable financial record and must stay
+    # readable without joining to the group it came from.
+    currency = Column(String(3), nullable=False, default="TZS")
     amount = Column(Numeric(12, 2), nullable=False)
     purpose = Column(String, nullable=False)
     repayment_weeks = Column(Integer, nullable=False)
@@ -213,6 +220,7 @@ class MobileMoneyStatement(Base):
     member_id = Column(Uuid(as_uuid=True), ForeignKey("members.id"), nullable=False)
     provider = Column(String, nullable=False)
     statement_period = Column(String, nullable=True)
+    currency = Column(String(3), nullable=False, default="TZS")
     total_inflow = Column(Numeric(12, 2), default=Decimal("0.00"))
     total_outflow = Column(Numeric(12, 2), default=Decimal("0.00"))
     net_flow = Column(Numeric(12, 2), default=Decimal("0.00"))
@@ -295,6 +303,8 @@ class Transaction(Base):
     )
     # share_purchase, loan_disbursement, loan_repayment, interest_earned, penalty, withdrawal
     transaction_type = Column(String(20), nullable=False, index=True)
+    # The ledger is the durable financial record; it denominates itself.
+    currency = Column(String(3), nullable=False, default="TZS")
     amount = Column(Numeric(12, 2), nullable=False)
     balance_after = Column(Numeric(12, 2), nullable=False, default=Decimal("0.00"))
     description = Column(String(255), nullable=True)

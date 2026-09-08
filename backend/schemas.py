@@ -178,6 +178,7 @@ class MemberResponse(BaseModel):
     id: UUID
     group_id: UUID
     country: str
+    currency: str = "TZS"
     full_name: str
     phone: str
     phone_provider: Optional[str]
@@ -212,6 +213,7 @@ class LoanApplicationResponse(BaseModel):
     group_id: UUID
     member_name: Optional[str]
     group_name: Optional[str]
+    currency: str = "TZS"
     amount: Decimal
     purpose: str
     repayment_weeks: int
@@ -346,6 +348,7 @@ class PassbookResponse(BaseModel):
     group_id: UUID
     group_name: str
     national_id: Optional[str]
+    currency: str = "TZS"
     savings_balance: Decimal
     loan_balance: Decimal
     transaction_count: int

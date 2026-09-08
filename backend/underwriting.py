@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from config import settings
 from country_packs import tanzania as tz
 from models import Group, LoanApplication, Member
+from money import CurrencyMismatch
 
 
 class TanzanianUnderwritingEngine:
@@ -17,6 +18,12 @@ class TanzanianUnderwritingEngine:
 
     @classmethod
     def evaluate(cls, member: Member, group: Group, loan: LoanApplication) -> Dict[str, Any]:
+        # Every ratio below — savings-to-loan, group guarantee, debt service — is
+        # dimensionless only because numerator and denominator share a currency.
+        # Nothing else enforces that, so enforce it here before any of it is
+        # computed: a mixed-denomination DSR is a number with no meaning.
+        cls._require_single_currency(member, group, loan)
+
         amount = float(loan.amount)
         savings = float(member.savings_balance or Decimal("0"))
         total_repayment = float(loan.total_repayment or Decimal("0"))
@@ -162,6 +169,28 @@ class TanzanianUnderwritingEngine:
             "critical_failures": critical_failures,
             "recommendation": recommendation,
         }
+
+    @staticmethod
+    def _require_single_currency(
+        member: Member, group: Group, loan: LoanApplication
+    ) -> None:
+        """Refuse to underwrite across denominations.
+
+        Raises rather than converting: an FX rate is a business decision with a
+        timestamp and an audit trail, and it has no place inside a scoring pass.
+        """
+        seen = {
+            "member": getattr(member, "currency", None),
+            "group": getattr(group, "currency", None),
+            "loan": getattr(loan, "currency", None),
+        }
+        present = {k: v for k, v in seen.items() if v}
+        if len(set(present.values())) > 1:
+            detail = ", ".join(f"{k}={v}" for k, v in present.items())
+            raise CurrencyMismatch(
+                f"cannot underwrite across currencies ({detail}); "
+                "the affordability ratios are only meaningful in one denomination"
+            )
 
     @staticmethod
     def _recommendation(

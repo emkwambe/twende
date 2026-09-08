@@ -21,6 +21,7 @@ from typing import Iterable, List, Optional
 from sqlalchemy.orm import Session
 
 from country_packs import tanzania as tz
+from money import CurrencyMismatch
 from models import Group, LoanApplication, Member, Transaction
 
 # ─── Transaction vocabulary ─────────────────────────────────────────────────
@@ -122,10 +123,20 @@ def post_transaction(
     elif transaction_type == LOAN_REPAYMENT:
         member.loan_balance = max(ZERO, money(member.loan_balance or ZERO) - debt)
 
+    # A ledger row inherits the group's denomination. If the member is somehow
+    # denominated differently, the balances about to be written are meaningless —
+    # fail loudly rather than post an entry nobody can interpret later.
+    if member.currency and group.currency and member.currency != group.currency:
+        raise CurrencyMismatch(
+            f"member {member.id} is in {member.currency} but group {group.id} "
+            f"is in {group.currency}; refusing to post a mixed-currency entry"
+        )
+
     txn = Transaction(
         member_id=member.id,
         group_id=group.id,
         loan_id=loan.id if loan else None,
+        currency=group.currency,
         transaction_type=transaction_type,
         amount=amount,
         balance_after=money(member.savings_balance or ZERO),
@@ -260,7 +271,7 @@ def build_quarterly_report(db: Session, group: Group) -> dict:
         "period": f"Q{quarter} {year}",
         "period_start": start.date(),
         "period_end": (end - timedelta(days=1)).date(),
-        "currency": tz.CURRENCY,
+        "currency": group.currency,
         "total_savings": total_savings,
         "total_loans_disbursed": disbursed,
         "total_repayments_collected": repaid,

@@ -16,7 +16,7 @@ from database import get_db
 from dependencies import get_current_user
 import ledger
 from constitution import generate_constitution
-from country_packs import tanzania as tz
+from country_packs import get_pack, tanzania as tz
 from models import (
     Constitution,
     Group,
@@ -170,6 +170,9 @@ def create_group(
     data = payload.model_dump()
     if not data.get("country"):
         data["country"] = current_user.country
+    # Denomination is decided once, at creation, from the country's pack — never
+    # inferred later from whatever pack happens to be imported.
+    data["currency"] = get_pack(data["country"]).CURRENCY
     group = Group(**data)
     db.add(group)
     db.commit()
@@ -179,6 +182,8 @@ def create_group(
     chair = Member(
         user_id=current_user.id,
         group_id=group.id,
+        country=group.country,
+        currency=group.currency,
         full_name=current_user.display_name,
         phone=current_user.phone,
         role=GroupRole.CHAIR,
@@ -242,6 +247,9 @@ def create_member(
 
     if not data.get("country"):
         data["country"] = group.country
+    # A member's money lives in the group's currency, not their own country's —
+    # the two can differ for a member who joined a group across a border.
+    data["currency"] = group.currency
     member = Member(**data)
     db.add(member)
     group.member_count = (group.member_count or 0) + 1
@@ -297,6 +305,7 @@ def apply_for_loan(
     loan = LoanApplication(
         member_id=member.id,
         group_id=group.id,
+        currency=group.currency,
         amount=payload.amount,
         purpose=payload.purpose,
         repayment_weeks=payload.repayment_weeks,
@@ -579,7 +588,7 @@ def get_loan_eligibility(
         tier_name=band["name"],
         max_amount=money(max_amount),
         interest_rate=float(band["interest_rate"]),
-        currency=tz.CURRENCY,
+        currency=group.currency,
         savings_balance=money(savings),
         outstanding_balance=money(outstanding),
         available_headroom=money(headroom),
@@ -631,6 +640,7 @@ def _loan_response(loan: LoanApplication) -> LoanApplicationResponse:
         group_id=loan.group_id,
         member_name=loan.member.full_name if loan.member else None,
         group_name=loan.group.name if loan.group else None,
+        currency=loan.currency,
         amount=loan.amount,
         purpose=loan.purpose,
         repayment_weeks=loan.repayment_weeks,
@@ -952,6 +962,7 @@ def get_member_passbook(
         group_id=member.group_id,
         group_name=group.name if group else "",
         national_id=member.national_id,
+        currency=member.currency,
         savings_balance=member.savings_balance or Decimal("0.00"),
         loan_balance=member.loan_balance or Decimal("0.00"),
         transaction_count=len(transactions),

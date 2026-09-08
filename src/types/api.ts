@@ -12,6 +12,7 @@ export interface MemberProfile {
   phone: string;
   phone_provider: string | null;
   national_id: string | null;
+  currency: string;
   savings_balance: string;
   loan_balance: string;
   credit_score: number | null;
@@ -53,6 +54,8 @@ export interface LoanApplication {
   group_id: string;
   member_name: string | null;
   group_name: string | null;
+  /** ISO 4217 code the amounts on this row are denominated in. */
+  currency: string;
   amount: string;
   purpose: string;
   repayment_weeks: number;
@@ -90,6 +93,7 @@ export interface Passbook {
   group_id: string;
   group_name: string;
   national_id: string | null;
+  currency: string;
   savings_balance: string;
   loan_balance: string;
   transaction_count: number;
