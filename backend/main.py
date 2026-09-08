@@ -1,5 +1,6 @@
 """Twende FastAPI backend — auth, users, and group underwriting."""
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
@@ -16,6 +17,7 @@ from database import get_db
 from dependencies import get_current_user
 import ledger
 from constitution import generate_constitution
+from observability import configure_observability
 from country_packs import get_pack, tanzania as tz
 from models import (
     Constitution,
@@ -67,6 +69,13 @@ from underwriting import TanzanianUnderwritingEngine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Install telemetry controls before anything is served. The NationalId type is the
+# primary defence; this is the backstop for strings that never passed through it.
+configure_observability(
+    sentry_dsn=os.getenv("SENTRY_DSN"),
+    environment=os.getenv("ENVIRONMENT", "development"),
+)
 
 
 @asynccontextmanager

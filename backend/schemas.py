@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from country_config import NIDA_REGEX
+from national_id import format_nida, validate_nida as nid_validate
 
 
 # ─── Auth ───────────────────────────────────────────────────────────────────
@@ -168,10 +168,19 @@ class MemberCreate(BaseModel):
 
     @field_validator("national_id")
     @classmethod
-    def validate_nida(cls, v: Optional[str]) -> Optional[str]:
-        if v and not re.match(NIDA_REGEX, v):
-            raise ValueError("Invalid NIDA format. Expected: YYYY-MMDD-XXXXX-XXXXX-XX")
-        return v
+    def validate_national_id(cls, v: Optional[str]) -> Optional[str]:
+        """Normalise, validate, and store the canonical card grouping.
+
+        Accepts whatever grouping the holder types. The number is printed 8-5-5-2
+        and the previous rule demanded 4-4-5-5-2, so copying the card verbatim was
+        rejected. Errors say what to fix rather than just "invalid".
+        """
+        if not v:
+            return v
+        result = nid_validate(v)
+        if not result.valid:
+            raise ValueError("; ".join(result.errors))
+        return format_nida(result.digits)
 
 
 class MemberResponse(BaseModel):

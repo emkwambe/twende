@@ -31,7 +31,7 @@ export const COUNTRY_CONFIG: Record<CountryCode, CountryConfig> = {
     currencySymbol: 'TSh',
     phonePrefix: '+255',
     idLabel: 'NIDA',
-    idPlaceholder: '1990-0101-99999-00000-00',
+    idPlaceholder: '19900101-99999-00000-00',
     groupTypeDefault: 'vicoba',
     groupTypes: ['vicoba', 'upatu', 'sacco', 'other'],
   },

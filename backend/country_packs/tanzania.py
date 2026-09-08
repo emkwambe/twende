@@ -10,10 +10,23 @@ COUNTRY_CODE = "TZ"
 COUNTRY_NAME = "Tanzania"
 PHONE_PREFIX = "+255"
 
-# NIDA (national ID): YYYY-MMDD-XXXXX-XXXXX-XX
+# NIDA (national ID): 20 digits. Positions 1-8 are the registered date of birth
+# as YYYYMMDD; 9-13 encode the postcode of the place of registration. There is no
+# publicly documented check-digit algorithm, so validation stops at shape and
+# date -- see national_id.py.
 ID_LABEL = "NIDA"
-NIDA_REGEX = r"^\d{4}-\d{4}-\d{5}-\d{5}-\d{2}$"
-NIDA_FORMAT_HINT = "1990-0101-99999-00000-00"
+ID_DIGITS = 20
+# Accepts the grouping printed on the card (8-5-5-2), the historical 4-4-5-5-2
+# form, and unseparated digits. Real validation runs on normalised digits via
+# national_id.validate_nida; this pattern covers hints and client-side shape.
+NIDA_REGEX = (
+    r"^(?:\d{8}-\d{5}-\d{5}-\d{2}"
+    r"|\d{4}-\d{4}-\d{5}-\d{5}-\d{2}"
+    r"|\d{20})$"
+)
+# Rendered as the holder sees it on the card. Ward 99999 and check digits 00 do
+# not occur in issued numbers, so this reads as synthetic at a glance.
+NIDA_FORMAT_HINT = "19900101-99999-00000-00"
 
 # ─── Money ──────────────────────────────────────────────────────────────────
 CURRENCY = "TZS"
