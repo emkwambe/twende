@@ -5,13 +5,14 @@ import type { GroupMember, RegistryExport as RegistryExportData } from '../../ty
 
 interface RegistryExportProps {
   groupId: string;
+  reloadKey?: number;
 }
 
 function formatTZS(value: string | number): string {
   return `TZS ${Math.round(Number(value) || 0).toLocaleString()}`;
 }
 
-export default function RegistryExport({ groupId }: RegistryExportProps) {
+export default function RegistryExport({ groupId, reloadKey }: RegistryExportProps) {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -33,7 +34,7 @@ export default function RegistryExport({ groupId }: RegistryExportProps) {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, reloadKey]);
 
   const totalSavings = members.reduce((sum, m) => sum + Number(m.savings_balance || 0), 0);
 

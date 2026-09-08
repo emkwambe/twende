@@ -7,7 +7,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -192,18 +192,36 @@ def create_group(
     db.commit()
     db.refresh(group)
 
-    # Creator becomes the chair of the group
-    chair = Member(
-        user_id=current_user.id,
-        group_id=group.id,
-        country=group.country,
-        currency=group.currency,
-        full_name=current_user.display_name,
-        phone=current_user.phone,
-        role=GroupRole.CHAIR,
-    )
-    db.add(chair)
-    group.member_count = 1
+    # Creator becomes the chair of the group. The platform currently treats a
+    # user as having one primary membership, so reuse an existing Member row
+    # (e.g. the demo user's seeded record) rather than failing on the unique
+    # phone constraint.
+    chair = db.query(Member).filter(Member.user_id == current_user.id).first()
+    if chair:
+        old_group_id = chair.group_id
+        chair.group_id = group.id
+        chair.country = group.country
+        chair.currency = group.currency
+        chair.full_name = current_user.display_name
+        chair.phone = current_user.phone
+        chair.role = GroupRole.CHAIR
+        if old_group_id != group.id:
+            old_group = db.query(Group).filter(Group.id == old_group_id).first()
+            if old_group and (old_group.member_count or 0) > 0:
+                old_group.member_count -= 1
+    else:
+        chair = Member(
+            user_id=current_user.id,
+            group_id=group.id,
+            country=group.country,
+            currency=group.currency,
+            full_name=current_user.display_name,
+            phone=current_user.phone,
+            role=GroupRole.CHAIR,
+        )
+        db.add(chair)
+
+    group.member_count = (group.member_count or 0) + 1
     db.commit()
     db.refresh(group)
     return group
@@ -845,7 +863,9 @@ def get_group_constitution(
         .first()
     )
     if not constitution:
-        raise HTTPException(status_code=404, detail="No constitution found for this group")
+        # Empty state is normal; return 204 so the frontend does not log a
+        # network error in the browser console.
+        return Response(status_code=204)
     return constitution
 
 

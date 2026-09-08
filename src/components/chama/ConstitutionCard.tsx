@@ -25,7 +25,7 @@ export default function ConstitutionCard({ groupId }: ConstitutionCardProps) {
     setError(null);
     try {
       const response = await api.get<Constitution>(`/groups/${groupId}/constitution`);
-      setConstitution(response.data);
+      setConstitution(response.data ?? null);
     } catch (err: any) {
       if (err.response?.status === 404) {
         setConstitution(null);

@@ -20,6 +20,59 @@ export interface MemberProfile {
   country: string;
 }
 
+export interface Group {
+  id: string;
+  name: string;
+  country: string;
+  group_type: string;
+  location: string | null;
+  region: string | null;
+  member_count: number;
+  total_savings: string;
+  interest_rate: string;
+  meeting_frequency: string;
+  chair_name: string | null;
+  treasurer_phone: string | null;
+  status: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface GroupCreateRequest {
+  name: string;
+  country: string;
+  group_type: string;
+  location?: string;
+  region?: string;
+  member_count?: number;
+  total_savings?: number;
+  interest_rate?: number;
+  meeting_frequency?: string;
+  chair_name?: string;
+  treasurer_phone?: string;
+  status?: string;
+}
+
+export interface MemberCreateRequest {
+  group_id: string;
+  country?: string;
+  full_name: string;
+  phone: string;
+  phone_provider?: string;
+  secondary_phone?: string;
+  national_id?: string;
+  tin_number?: string;
+  brela_number?: string;
+  nssf_number?: string;
+  occupation?: string;
+  business_type?: string;
+  savings_balance?: number;
+  loan_balance?: number;
+  credit_score?: number;
+  role?: string;
+  status?: string;
+}
+
 export interface LoanEligibility {
   member_id: string;
   group_id: string;
