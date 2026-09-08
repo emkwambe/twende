@@ -31,7 +31,7 @@ Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-d
 | 17 | Trust Engine calibration has no backend counterpart | Medium | **Open** |
 | 18 | No join-a-group flow | Medium — golden path gap | **Open** |
 | 19 | Country packs are not actually multi-country | High — blocks expansion | **Open** — Sprint 16 |
-| 20 | No currency denomination on any money column | High — silent corruption | **Open — do first** |
+| 20 | No currency denomination on any money column | High — silent corruption | **Fixed** `9675843` |
 
 ---
 
@@ -345,7 +345,7 @@ And the code is not the long pole — **every market needs its own licence and d
 
 ---
 
-## 20. No currency denomination on any money column — **open, do first**
+## 20. No currency denomination on any money column — **fixed**
 
 **Evidence.** Thirteen money columns across five tables (`groups`, `members`, `loan_applications`, `mobile_money_statements`, `transactions`) are bare `Numeric(12, 2)`. **No currency is stored anywhere** — not on the row, not on the table, not in a constraint. The two `currency` fields in `schemas.py` are response-shaping only, computed from `tz.CURRENCY` at serialisation and never persisted.
 
@@ -357,7 +357,17 @@ And the code is not the long pole — **every market needs its own licence and d
 
 **Decision.** Add currency to every money-bearing table, backfill `TZS`, enforce `NOT NULL`, and make an amount without a currency unconstructible in the application layer — the same "make the wrong thing unrepresentable" move as the redacting `NationalId` type.
 
-**This one should not wait for Sprint 15.** It is not a multi-country feature, it is a correctness bug, and it is cheap now and a data-repair exercise after the pilot writes a few thousand transactions. Alembic is already wired (5 migrations), so it is an ordinary migration.
+**Fixed** in `9675843`, ahead of Sprint 15, because it is a correctness bug rather than a multi-country feature and gets more expensive with every transaction written.
+
+**What shipped.** A `currency` column on all five tables — loans and transactions carry their own rather than joining to the group, since they are the durable financial record. A three-step migration (nullable → backfill from each row's country or its parent → `NOT NULL`) so no row is ever undenominated mid-flight, with the backfill map written literally rather than imported, because a migration must keep producing the same result years from now. Write paths denominate at creation from the country pack; `ledger.post_transaction` refuses a member/group disagreement; `underwriting.evaluate` refuses to score across denominations *before* computing anything.
+
+**The load-bearing piece is `money.py`.** `Money` cannot be constructed without a currency, cannot be combined across currencies, and cannot be multiplied by `Money`. `Money ÷ Money` returns a bare ratio — the shape every underwriting ratio takes, and dimensionless only because both sides now provably share a denomination. Deliberately **not** an FX layer: conversion needs a rate, a timestamp and an audit trail, and does not belong in an arithmetic operator.
+
+**All 23 tests assert that something raises**, not that it computes. The failure being defended against is silent, so producing the right answer is not the property under test.
+
+**Incidental finding:** Alembic had no `render_as_batch` for SQLite, so none of these `ALTER`s would have applied. Now enabled, dialect-conditional.
+
+`scripts/verify_currency_integrity.py` gates CI: no undenominated row, none disagreeing with its parent, no currency unbacked by a country pack.
 
 ---
 
