@@ -21,7 +21,7 @@ Cross-references rather than duplicates: `UNDERWRITING_ENGINE.md` for the loan-d
 | 7 | Gateway 5xx misclassified as "server answered" | Low | **Fixed** `d2ddc68` |
 | 8 | NIDA placeholder was a near-neighbour of a real number | High — PII | **Fixed** `bd09706` |
 | 9 | `SHA-256(nida)` is functionally plaintext | High — PII | **Decided**, planned |
-| 10 | `national_id` hard reject excludes 35–43% of adults | High — inclusion | **Planned** Sprint 15 |
+| 10 | `national_id` hard reject excluded 35–43% of adults | High — inclusion | **Fixed** `c9b16d4` |
 | 11 | NIDA regex rejected the grouping printed on the card | Medium — onboarding | **Fixed** `280b5c3` |
 | 12 | No public NIN check-digit algorithm exists | Medium — constrains design | **Decided**, enforced by test `280b5c3` |
 | 13 | Formalization scoring is a wealth proxy | Medium — fairness | **Accepted with tripwire** |
@@ -210,13 +210,21 @@ The real entropy of a national ID is bounded by the population holding one: **~2
 
 ---
 
-## 10. The `national_id` hard reject excludes a third of the market
+## 10. The `national_id` hard reject excluded a third of the market — **fixed**
 
 **Evidence.** `underwriting.py`'s first critical check rejects any application where `member.national_id` is absent. Roughly **35–43% of Tanzanian adults** hold no usable NIDA credential (FSDT 2023: 57% have a NIN; ~1.2M produced cards uncollected as of Jan 2025). FinScope 2023: rural formal access 57% vs urban 82%; women, under-25s, dependants and rural dwellers 40–80% excluded.
 
 **Why this is the sharpest finding in the engagement.** It lands on the same cohort the Chama Calibration Analysis identified as the primary customer — the rural female vendor with a five-year perfect contribution record. Wealth bias was removed from the chama factor; a NIDA gate reintroduces the same exclusion one layer earlier, **in the enrolment funnel, where no fairness audit can see it.** You cannot measure bias in people who never got an account.
 
-**Decision.** Replace the hard reject with a Tier 2 check reachable by two routes — documentary, or community attestation. Sprint 15 §3.
+**Fixed** in `c9b16d4`. The check is now a KYC tier check with two routes to Tier 2: a verified NIDA, or a ward/village executive letter corroborated by two verified officers of the member's own group.
+
+**The route is lawful, not lenient.** BoT Form F lists a WEO/VEO letter among accepted photo ID, as do NBC's Kikundi rules and GN 678. A NIDA-only flow was stricter than Tanzanian law requires. `docs/IDENTITY_REFEREE_POLICY.md` is the written, filed policy the Liberian central-bank model calls for.
+
+**Verified live:** Juma (no NIDA, attestation route) reaches Tier 2 and is approved at 85.0/100; Wanjiku (NIDA) at 71.44/100.
+
+**Two design points worth keeping.** Tier is *derived* from evidence rather than read from `member.kyc_tier`, which is only a cache — a cached tier outliving its evidence is how an expired credential keeps unlocking credit. And attesting officers must themselves be verified, or unverified accounts could vouch each other into credit.
+
+**The residual disparity is retained and monitored,** not resolved: an attested member scores zero on formalization (up to 15 of 100 points), where a NIDA holder scores at least 8. Both routes reach the same door, not yet the same terms. See #13 for the tripwire.
 
 ---
 
