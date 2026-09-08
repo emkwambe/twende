@@ -1,3 +1,16 @@
+> ## ⚠️ PARTIALLY OVERTAKEN — check scope before implementing
+>
+> The **Golden Path** (`CLAUDE_PROMPT_GOLDEN_PATH.md`, shipped in `d2ddc68`) implemented a
+> scoped slice of this sprint: Trust Score, loan eligibility, loan application with a live
+> underwriting decision, repayment, and the passbook. It also added the service layer
+> (`src/services/`), wire types (`src/types/api.ts`) and the `useApiData` fallback hook.
+>
+> **Still outstanding:** Kazi, Linda and Soko remain on `mockData.ts`.
+>
+> Note the stack differs from what this spec assumes — see `00-SPRINT_ROADMAP.md` §2.
+
+---
+
 # Sprint 3: Frontend-API Integration
 
 **Goal:** Replace all mock data with real API calls. Frontend fetches from backend, displays real data, handles loading states and errors.  
@@ -282,7 +295,9 @@ export const useCreateContribution = () => {
 ## Kimi Code Execution Prompt
 
 ```powershell
-cd C:userse1c8se1c8s	wende-app
+cd C:users
+e1c8s
+e1c8s	wende-app
 kimi "Integrate the frontend with the backend API. Read sprints/03-SPRINT_INTEGRATION.md for full requirements.
 
 Install these packages:

@@ -1,176 +1,138 @@
 # TWENDE Sprint Roadmap
 
-**Version:** 1.0  
-**Date:** July 2026  
-**Owner:** Engineering Team  
-**Status:** Sprint 1 Ready for Implementation
+**Status of this document:** rewritten to match the repository as built.
+**Last verified against the code:** September 2026
+
+The previous version was written before implementation began and drifted badly — it listed twelve sprints when there are sixteen, indexed several documents under filenames that do not exist, described a Node.js/Express backend that was never built, and still read *"Status: Sprint 1 Ready for Implementation"* after five sprints had shipped. Anyone using it as a map was being misled. Statuses below were verified by reading the code and the commit history, not by trusting the specs.
 
 ---
 
-## Philosophy
+## How to read this
 
-This roadmap is designed for **incremental delivery** — each sprint produces a working, deployable increment. No sprint depends on future sprints to be functional. Each sprint builds on previous sprints but can stand alone.
+**Sprint numbers are identifiers, not a schedule.** They record the order specs were written. Several were overtaken by reality, and two are now superseded outright. **Execution order lives in §3**, and it does not follow the numbering.
 
-The guiding principle: **"Ship working software every sprint."** Not perfect software. Working software.
+Three statuses are used, and the distinction matters:
 
----
-
-## Sprint Overview
-
-| Sprint | Name | Goal | Duration | Dependencies | Business Value |
-|---|---|---|---|---|---|
-| 1 | Authentication & Onboarding | Users can register, verify, and access the platform | 1 week | None | Foundation — no users = no product |
-| 2 | Backend API Foundation | Real database, real APIs, real data persistence | 1.5 weeks | Sprint 1 | Data persistence enables everything else |
-| 3 | Frontend-API Integration | Replace all mock data with real API calls | 1 week | Sprint 2 | Users see their real data, not demos |
-| 4 | M-Pesa Payment Integration | Real money movement through Daraja | 1.5 weeks | Sprint 3 | Revenue begins — transaction fees |
-| 5 | Credit Scoring Engine v1 | Alternative credit scores from real data | 1 week | Sprint 4 | Core moat — unlocks lending |
-| 6 | Cross-Product Event Bus | Kafka events wire all products together | 1 week | Sprint 5 | The flywheel effect |
-| 7 | Merchant Super-App v2 | Full Biashara merchant tools | 1 week | Sprint 6 | Revenue from SaaS + loans |
-| 8 | Gig Worker Platform SDK | White-label Kazi for gig platforms | 1 week | Sprint 6 | Partnership revenue |
-| 9 | Insurance AI Adjudication | Automated claims processing | 1 week | Sprint 6 | Margin improvement |
-| 10 | Soko Commerce v2 | WhatsApp bot, delivery, bulk orders | 1.5 weeks | Sprint 8 + 9 | Commerce revenue |
-| 11 | Regional Expansion | Tanzania, Uganda, Rwanda | 2 weeks | Sprint 10 | 4x addressable market |
-| 12 | Analytics & Intelligence | Business dashboards, ML models | 1.5 weeks | Sprint 11 | Operational excellence |
-
-**Total Timeline:** ~14 weeks (3.5 months) to full platform
+- **Shipped** — implemented, in `main`, with a commit reference.
+- **Frontend only** — the UI exists and runs on `mockData.ts`; there is no backend behind it.
+- **Superseded** — the spec describes a system that was not built and should not now be built. Kept for history; do not implement.
 
 ---
 
-## Critical Path
+## 1. What is actually built
 
-```
-Sprint 1 (Auth) → Sprint 2 (Backend) → Sprint 3 (Integration) → Sprint 4 (M-Pesa)
-                                                          ↓
-                                              Sprint 5 (Credit Scoring)
-                                                          ↓
-                                              Sprint 6 (Event Bus)
-                                                          ↓
-                                    Sprint 7 ─┬─ Sprint 8 ─┴─ Sprint 9 ─┬─ Sprint 10
-                                              ↓                          ↓
-                                    Sprint 11 (Regional Expansion)
-                                                          ↓
-                                    Sprint 12 (Analytics)
-```
-
-**Sprints 1–6 are the critical path.** Everything after Sprint 6 can be parallelized based on business priorities.
-
----
-
-## Resource Allocation
-
-| Sprint | Frontend Focus | Backend Focus | DevOps Focus |
+| # | Sprint | Status | Evidence |
 |---|---|---|---|
-| 1 | 80% | 10% | 10% |
-| 2 | 20% | 70% | 10% |
-| 3 | 70% | 20% | 10% |
-| 4 | 30% | 60% | 10% |
-| 5 | 10% | 80% | 10% |
-| 6 | 20% | 70% | 10% |
-| 7–12 | Varies by sprint | Varies by sprint | 10% |
+| 01 | Authentication & Onboarding | **Shipped** | 6 auth endpoints, JWT + refresh rotation, OTP, RBAC, KYC tier field |
+| 02 | Backend API Foundation | **Superseded** | Specced Node.js/Express + PostgreSQL. Built as **FastAPI + SQLAlchemy + Alembic + SQLite**. See §4 |
+| 03 | Frontend-API Integration | **Partial** | Golden Path wired Trust Score, loans and passbook. Kazi, Linda, Soko still on `mockData.ts` |
+| 04 | M-Pesa Integration | **Not started** | No Daraja/STK code anywhere in the repo |
+| 05 | Credit Scoring Engine | **Shipped** | `308d4c6` — Trust Engine, 7 factors, 5 components. Recalibrated in `c249a61` |
+| 06 | Cross-Product Event Bus | **Not started** | No Kafka code. Cross-pillar flow is direct, not evented |
+| 07 | Biashara v2 | **Shipped** | `a639c72` — reducing-balance calculator, business dashboard, 9 components |
+| 08 | Kazi v2 | **Frontend only** | 7 components; no backend |
+| 09 | Linda v2 | **Not started** | Page only; no components, no backend |
+| 10 | Soko v2 | **Shipped** | `e9e539c` — marketplace, 13 components, WhatsApp selling, flash sales |
+| 11 | Regional Expansion (UG/ET/RW) | **Superseded** | Written when Kenya was the base market. See §4 |
+| 12 | Analytics & Intelligence | **Not started** | — |
+| 13 | Group Formalization Toolkit | **Shipped** | `d7a7f7e` backend, `89840ed` frontend. Segmentation correction applied |
+| — | **Golden Path** | **Shipped** | `d2ddc68` — live API for Trust Score, eligibility, applications, repayment, passbook. Spec: `CLAUDE_PROMPT_GOLDEN_PATH.md` (unnumbered) |
+| 14 | Financial Records + Country Packs | **Shipped** | `2befdf8`, completed by `a756be8` |
+| 15 | Identity & KYC | **Planned** | `15-SPRINT_IDENTITY_KYC.md` |
+| 16 | Multi-Country Readiness | **Planned** | `16-SPRINT_MULTI_COUNTRY.md` |
+
+**Highest implemented sprint: 14.** The largest body of work since then — the Golden Path — carries no number.
 
 ---
 
-## Definition of Done (All Sprints)
+## 2. What the platform actually is
 
-Every sprint is complete only when ALL of the following are true:
+Stated plainly, because three sprint specs still describe something else:
 
-1. **Build passes:** `npm run build` succeeds with zero TypeScript errors
-2. **Code committed:** All changes committed with professional commit messages
-3. **Code pushed:** Changes pushed to `origin main`
-4. **Deployed:** Live on Vercel (preview or production)
-5. **Tested:** User can complete the primary flow end-to-end
-6. **Documented:** Any new APIs, components, or data structures documented in code comments
-7. **No regressions:** Previous sprints' functionality still works
-
----
-
-## Guardrails (Apply to Every Sprint)
-
-### Technical Guardrails
-
-| Rule | Rationale | Enforcement |
-|---|---|---|
-| **Never use `any` type** | Type safety prevents runtime errors | TypeScript strict mode + build fails |
-| **Never import unused dependencies** | Build fails, bundle bloat | `tsc` + lint checks |
-| **Never commit secrets** | Security breach risk | `.env` in `.gitignore`, pre-commit hooks |
-| **Never skip `npm run build` before committing** | Catches errors early | Build discipline |
-| **Never modify design system tokens without PRD approval** | UI consistency | PRD review gate |
-| **Never use `console.log` in production** | Performance + security | Lint rule + code review |
-| **Always handle API errors** | UX resilience | Error boundaries + toast notifications |
-| **Always show loading states** | Perceived performance | Skeleton screens + spinners |
-| **Always validate user input** | Data integrity + security | Zod schemas on frontend + backend |
-
-### Product Guardrails
-
-| Rule | Rationale | Enforcement |
-|---|---|---|
-| **Every feature must have a business justification** | Prevents scope creep | Sprint planning gate |
-| **Every UI change must be accessible** | Inclusive design | WCAG 2.1 AA compliance |
-| **Every payment flow must be reversible** | Consumer protection | Refund/cancel mechanisms |
-| **Every user action must be auditable** | Regulatory compliance | Event logging + blockchain anchoring |
-| **Never store M-Pesa PINs** | Security | Daraja handles PIN entry |
-| **Always encrypt PII at rest** | Data protection law | AES-256 field-level encryption |
-
-### Deployment Guardrails
-
-| Rule | Rationale | Enforcement |
-|---|---|---|
-| **Never deploy broken builds** | Production stability | Build gate in CI/CD |
-| **Always deploy to preview first** | Catch issues early | Vercel preview deployments |
-| **Never force-push to main** | Team safety | Branch protection rules |
-| **Always tag releases** | Traceability | Git tags for each sprint |
-
----
-
-## Sprint Selection Guide
-
-### If You Have 1 Week
-Execute **Sprint 1 only.** Users can register, verify, and see a personalized dashboard. This is demo-ready for investors.
-
-### If You Have 2 Weeks
-Execute **Sprints 1–2.** Users register, data persists in PostgreSQL, APIs serve real data. This is MVP-ready for early adopters.
-
-### If You Have 4 Weeks
-Execute **Sprints 1–4.** Full auth, real database, real APIs, real M-Pesa payments. This is revenue-ready — transaction fees begin.
-
-### If You Have 8 Weeks
-Execute **Sprints 1–7.** Full platform with credit scoring, merchant tools, and cross-product data flow. This is Series A-ready.
-
-### If You Have 14 Weeks
-Execute **all sprints.** Full 5-pillar platform, regional expansion, analytics. This is the complete vision.
-
----
-
-## How to Use This Roadmap with Kimi Code
-
-1. **Pick a sprint** based on your timeline and priorities
-2. **Read the sprint document** in `sprints/` folder
-3. **Copy the Kimi Code prompt** at the end of the sprint document
-4. **Paste into terminal:** `kimi "[prompt here]"`
-5. **Execute the PowerShell commands** Kimi Code generates
-6. **Verify:** Run `npm run build`, test the feature, deploy
-7. **Move to next sprint**
-
----
-
-## Document Index
-
-| Document | Contents |
+| Layer | Built |
 |---|---|
-| `00-SPRINT_ROADMAP.md` | This file — overview, timeline, guardrails, selection guide |
-| `01-SPRINT_AUTH.md` | Authentication, KYC, onboarding, auth context, protected routes |
-| `02-SPRINT_BACKEND.md` | Node.js/Express API, PostgreSQL schema, REST endpoints, seed data |
-| `03-SPRINT_INTEGRATION.md` | React Query, API service modules, replace mock data, error handling |
-| `04-SPRINT_MPESA.md` | M-Pesa Daraja integration, STK Push, B2C, C2B, webhooks |
-| `05-SPRINT_CREDIT.md` | Credit scoring engine, score calculation, tier unlocks |
-| `06-SPRINT_EVENTS.md` | Kafka event bus, cross-product communication, event consumers |
-| `07-SPRINT_MERCHANT.md` | Biashara merchant super-app, inventory, POS, analytics |
-| `08-SPRINT_GIG.md` | Kazi SDK, platform partnerships, AutoSave, per-ride insurance |
-| `09-SPRINT_INSURANCE.md` | Linda AI claims adjudication, policy management, payouts |
-| `10-SPRINT_COMMERCE.md` | Soko WhatsApp bot, delivery integration, bulk orders |
-| `11-SPRINT_REGIONAL.md` | Multi-country KYC, currency, language, regulatory compliance |
-| `12-SPRINT_ANALYTICS.md` | Business intelligence, dashboards, ML models, reporting |
+| Frontend | React 19, TypeScript 6, Vite 8, Tailwind 4, React Router 7 (HashRouter), TanStack Query, Recharts |
+| Backend | **FastAPI + SQLAlchemy + Alembic**, JWT + RBAC, **SQLite** (`twende.db`) |
+| Scoring | Two engines — frontend Trust Engine (7 factors, 300–850) and backend underwriting (5 factors, 0–100). See `docs/UNDERWRITING_ENGINE.md` |
+| Market | **Tanzania-first.** TZS throughout, VICOBA/Upatu vocabulary, NIDA/TIN/BRELA |
+| Payments | **None.** No mobile-money integration exists |
+| Events | **None.** No message bus |
 
 ---
 
-*Sprint Roadmap v1.0 — July 2026*
+## 3. Execution order
+
+This is the schedule. It does not follow the numbering.
+
+| Order | Work | Why here | Blocked by |
+|---|---|---|---|
+| **1** | **Currency denomination** (Sprint 16, Phase 0) | A correctness bug, not a feature. Thirteen money columns carry no currency. Cheap now; a data-repair exercise once the pilot writes transactions | Nothing |
+| **2** | **PDPC registration + DPO** | Processing personal data without registration is prohibited; enforcement live since 9 Apr 2026. ~TZS 100,000 | Nothing — do it in parallel with 1 |
+| **3** | **Sprint 15 Phase 1** (regex, redaction, telemetry) | Removes present-tense harm; needs no external input | Nothing |
+| **4** | **Sprint 15 Phases 2–6** (tiers, custody, UX, DSAR) | Identity is the gate on real-money disbursement | Phase 1; KMS availability |
+| **5** | **Sprint 16 Phases 1–3** (pack contract, runtime resolution, Kenya) | KYC produces the reference implementation that defines the contract | Sprint 15 |
+| **6** | Sprint 04 — M-Pesa | Real money movement | 15 (KYC gates disbursement) |
+| **7** | Sprint 03 remainder — Kazi/Linda/Soko integration | Removes the last mock data | 02-equivalent work is done |
+| **8** | Sprint 16 Phase 4 — Uganda, Rwanda | Genuinely additive once the contract holds | 16 Phases 1–3, plus per-market legal |
+
+**Long-lead items that gate the pilot** and should start now regardless of engineering order: the Tanzania cross-border transfer permit (unpublished timeline), the Kenya DPIA (**must be filed 60 days before processing**), and NIDA CIG stakeholder access (government MoU cycle). See `docs/ENGINEERING_FINDINGS.md` § compliance calendar.
+
+---
+
+## 4. Superseded specs — do not implement
+
+**Sprint 02 — Backend API Foundation.** Specifies PostgreSQL 15, Node.js 20 + Express 4, `node-pg-migrate`. The backend was built as FastAPI + SQLAlchemy + Alembic on SQLite. The spec's *requirements* remain useful reading; its *stack decisions* are void. Migrating to PostgreSQL is a real future task, but it is not this document.
+
+**Sprint 11 — Regional Expansion (UG/ET/RW).** Written when Kenya was the base market and Tanzania was an expansion target. **That assumption has inverted** — Tanzania is now the primary market and the only implemented country pack. The spec also targets Ethiopia, which is no longer in scope. Superseded by **Sprint 16**, which starts from Tanzania and treats Kenya as the second market.
+
+**Sprint 03 — Frontend-API Integration.** Not superseded, but partially overtaken. The Golden Path implemented a scoped slice; the remainder (Kazi, Linda, Soko) still stands.
+
+---
+
+## 5. Known gaps not covered by any sprint
+
+Recorded so they are not mistaken for done. Detail in `docs/ENGINEERING_FINDINGS.md`.
+
+- **No join-a-group flow.** A newly registered user has no membership, so eligibility correctly 404s and they cannot borrow. Register → apply does not complete for a new account.
+- **The two scoring engines are not composed.** Underwriting reads no Trust Score; a Tier 4 and a Tier 1 borrower are underwritten identically.
+- **The chama recalibration has no backend counterpart.** The weights live only in `src/trust/algorithm.ts`.
+- **Bundle is a single ~1 MB chunk** with no code splitting — material on the low-end devices this product targets.
+- **SQLite in the production path.** Fine for the pilot; not for concurrent writes at scale.
+
+---
+
+## 6. Document index
+
+Verified filenames.
+
+| File | Contents | Status |
+|---|---|---|
+| `00-SPRINT_ROADMAP.md` | This file | Current |
+| `01-SPRINT_AUTH.md` | Auth, KYC, onboarding | Shipped |
+| `02-SPRINT_BACKEND.md` | Node/Express + PostgreSQL API | **Superseded** |
+| `03-SPRINT_INTEGRATION.md` | React Query, replace mock data | Partial |
+| `04-SPRINT_MPESA.md` | Daraja, STK Push, B2C, C2B | Not started |
+| `05-SPRINT_CREDIT_SCORE.md` | Trust Engine, tiers | Shipped |
+| `06-SPRINT_EVENT_BUS.md` | Kafka, cross-product events | Not started |
+| `07-SPRINT_BIASHARA_V2.md` | Merchant tools, reducing balance | Shipped |
+| `08-SPRINT_KAZI_V2.md` | Gig marketplace | Frontend only |
+| `09-SPRINT_LINDA_V2.md` | Insurance, claims | Not started |
+| `10-SPRINT_SOKO_V2.md` | Marketplace, WhatsApp selling | Shipped |
+| `11-SPRINT_REGIONAL.md` | Expansion UG/ET/RW | **Superseded by 16** |
+| `12-SPRINT_ANALYTICS.md` | Dashboards, ML | Not started |
+| `13-SPRINT_CHAMA_SEGMENTATION.md` | Group formalization | Shipped |
+| `Required Correction to Sprint 13.md` | Removes `primary_segment` as a chama-defining field | **Applied** |
+| `CLAUDE_PROMPT_GOLDEN_PATH.md` | End-to-end API integration | Shipped, unnumbered |
+| `15-SPRINT_IDENTITY_KYC.md` | Tiered KYC, PII custody, inclusion | Planned |
+| `16-SPRINT_MULTI_COUNTRY.md` | Currency integrity, pack contract, Kenya | Planned |
+
+**Related, outside `sprints/`:** `docs/ENGINEERING_FINDINGS.md` (findings and decisions, with status), `docs/UNDERWRITING_ENGINE.md` (the engine that actually decides loans), `docs/CHAMA_CREDIT_CALIBRATION_ANALYSIS.md` (why scoring is behaviour-normalized), `docs/TRUST_ENGINE_WHITEPAPER.md`, `docs/TWENDE_PLATFORM_BLUEPRINT.md`.
+
+---
+
+## 7. Keeping this honest
+
+This document drifted because nothing forced it to track reality. Two cheap habits prevent a repeat:
+
+1. **A sprint is not done until its row here says so, with a commit reference.**
+2. **When a spec is overtaken, mark it superseded in the same commit** that overtakes it. A spec that quietly describes a system nobody built is worse than no spec — someone will eventually implement it.

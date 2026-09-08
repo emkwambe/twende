@@ -5,7 +5,27 @@
 **Status:** Plan. Nothing in this sprint is implemented.
 **Depends on:** Sprint 14 (country packs — the shape), Sprint 15 (KYC — the forcing function)
 **Blocks:** Kenya, Uganda, Rwanda — any second market
+**Supersedes:** Sprint 11 (Regional Expansion UG/ET/RW)
 **Recommended order:** **Phase 0 now**, before anything else. Phases 1–4 after Sprint 15.
+
+> **On Phase 0 and the sprint number.** Phase 0 is a correctness fix that belongs to no
+> market, and it should run *before* Sprint 15 despite living in a higher-numbered
+> document. Sprint numbers here identify specs, not schedule; `00-SPRINT_ROADMAP.md` §3
+> holds the execution order. If it helps, treat Phase 0 as standalone work that Sprint 16
+> happens to document because it is the foundation the rest of the sprint stands on.
+
+---
+
+## 0.0 Relationship to Sprint 11
+
+`11-SPRINT_REGIONAL.md` covered the same ground and is superseded. It was written when
+**Kenya was the base market and Tanzania was an expansion target** — the reverse of where
+the platform now stands. It targets Uganda, **Ethiopia** and Rwanda; Ethiopia is out of
+scope, and Kenya, which the old spec treated as home, is now the market that needs a pack
+built.
+
+Its country research (mobile money providers, regulators, currency) may still be worth
+mining. Its sequencing and its geographic premise are not.
 
 ---
 

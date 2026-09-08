@@ -1,3 +1,20 @@
+> ## ⚠️ SUPERSEDED by Sprint 16 — do not implement
+>
+> This spec was written when **Kenya was the base market and Tanzania was an expansion
+> target**. That assumption has inverted: Tanzania is now the primary market and the
+> only implemented country pack. Ethiopia is no longer in scope.
+>
+> Superseded by **`16-SPRINT_MULTI_COUNTRY.md`**, which starts from Tanzania, fixes the
+> currency-denomination gap first, makes country-pack resolution real, and treats Kenya
+> as the second market that proves the contract.
+>
+> Country research below (mobile money providers, regulators) may still be useful;
+> the sequencing and the geographic assumption are not.
+>
+> See `00-SPRINT_ROADMAP.md` §4.
+
+---
+
 # Sprint 11: Regional Expansion (UG/ET/RW)
 
 ## Sprint Metadata

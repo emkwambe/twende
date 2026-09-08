@@ -1,3 +1,16 @@
+> ## ⚠️ SUPERSEDED — do not implement
+>
+> This spec calls for **PostgreSQL 15 + Node.js 20 + Express 4 + `node-pg-migrate`**.
+> The backend was built as **FastAPI + SQLAlchemy + Alembic on SQLite**.
+>
+> The *requirements* below remain useful reading — schema shape, endpoint coverage,
+> auth model. The *stack decisions* are void. Migrating off SQLite to PostgreSQL is a
+> real future task, but it is not this document.
+>
+> See `00-SPRINT_ROADMAP.md` §2 and §4.
+
+---
+
 # Sprint 2: Backend API Foundation
 
 **Goal:** Real database (PostgreSQL), real REST API (Node.js/Express), real data persistence. Frontend mock services replaced with actual API calls.  
@@ -288,7 +301,9 @@ RATE_LIMIT_MAX_REQUESTS=100
 ## Kimi Code Execution Prompt
 
 ```powershell
-cd C:userse1c8se1c8s	wende-app
+cd C:users
+e1c8s
+e1c8s	wende-app
 kimi "Create the backend API for TWENDE in a new folder called 'twende-api/'. Read sprints/02-SPRINT_BACKEND.md for full requirements.
 
 Tech stack: Node.js 20 + Express + Drizzle ORM + PostgreSQL + Zod + JWT (jose) + Pino + Helmet + express-rate-limit
